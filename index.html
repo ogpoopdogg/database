@@ -24,6 +24,28 @@
             color: var(--text-main);
             margin: 0;
             line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* --- LOGIN OVERLAY --- */
+        #login-overlay {
+            position: fixed; inset: 0; background: #050505; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px;
+        }
+        .login-box {
+            width: 100%; max-width: 380px; background: #111; padding: 40px; 
+            border-radius: 12px; border: 1px solid var(--border-muted); text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .login-input {
+            width: 100%; padding: 14px; margin: 12px 0; background: #0a0a0a; 
+            border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 16px; outline: none;
+        }
+        .login-input:focus { border-color: var(--brand-gold); }
+        .login-submit {
+            width: 100%; padding: 14px; margin-top: 20px; background: var(--brand-gold); 
+            border: none; color: #000; font-weight: 800; font-size: 16px; border-radius: 6px; 
+            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
         }
 
         /* --- HEADER & ANIMATED LOGO --- */
@@ -40,11 +62,7 @@
             align-items: center;
         }
 
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .brand { display: flex; align-items: center; gap: 15px; }
 
         .logo {
             height: 45px;
@@ -73,148 +91,85 @@
         @keyframes textShimmer { to { background-position: 200% center; } }
 
         /* --- LAYOUT --- */
-        .container {
-            max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
 
         .view-controls {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            background: var(--card-bg);
-            padding: 1rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-muted);
+            display: flex; gap: 1rem; margin-bottom: 2rem; background: var(--card-bg);
+            padding: 1rem; border-radius: 12px; border: 1px solid var(--border-muted);
         }
 
         .search-bar {
-            flex: 1;
-            background: #1c1c21;
-            border: 1px solid var(--border-muted);
-            padding: 0.8rem 1.2rem;
-            border-radius: 8px;
-            color: white;
-            font-size: 1rem;
+            flex: 1; background: #1c1c21; border: 1px solid var(--border-muted);
+            padding: 0.8rem 1.2rem; border-radius: 8px; color: white; font-size: 1rem;
         }
 
         /* --- DATA CARDS --- */
         .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 1.5rem;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1.5rem;
         }
 
         .job-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            border: 1px solid var(--border-muted);
-            overflow: hidden;
-            transition: transform 0.2s, border-color 0.2s;
-            display: flex;
-            flex-direction: column;
+            background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-muted);
+            overflow: hidden; transition: transform 0.2s, border-color 0.2s;
+            display: flex; flex-direction: column;
         }
 
-        .job-card:hover {
-            border-color: var(--brand-gold);
-            transform: translateY(-4px);
-        }
+        .job-card:hover { border-color: var(--brand-gold); transform: translateY(-4px); }
 
         .card-header {
-            padding: 1rem;
-            background: rgba(255,255,255,0.03);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 1rem; background: rgba(255,255,255,0.03);
+            display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid var(--border-muted);
         }
 
-        .type-badge {
-            font-size: 0.7rem;
-            font-weight: 900;
-            padding: 4px 10px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
+        .type-badge { font-size: 0.7rem; font-weight: 900; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
 
         .card-body { padding: 1.5rem; flex: 1; }
 
-        .data-row {
-            margin-bottom: 1.2rem;
-            position: relative;
-        }
+        .data-row { margin-bottom: 1.2rem; position: relative; }
 
         .label {
-            font-size: 0.65rem;
-            font-weight: 800;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: block;
-            margin-bottom: 4px;
+            font-size: 0.65rem; font-weight: 800; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;
         }
 
-        .value {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-main);
-            word-break: break-word;
-        }
+        .value { font-size: 1rem; font-weight: 600; color: var(--text-main); word-break: break-word; }
 
         .copy-btn {
-            background: #2d2d32;
-            border: none;
-            color: var(--brand-gold);
-            font-size: 0.6rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 8px;
-            text-transform: uppercase;
-            vertical-align: middle;
+            background: #2d2d32; border: none; color: var(--brand-gold);
+            font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; cursor: pointer;
+            margin-left: 8px; text-transform: uppercase; vertical-align: middle;
         }
 
         .copy-btn:hover { background: var(--brand-gold); color: black; }
 
         .notes-box {
-            background: #0a0a0b;
-            padding: 10px;
-            border-radius: 6px;
-            font-style: italic;
-            font-size: 0.9rem;
-            border-left: 3px solid var(--accent-blue);
-            color: #ccc;
+            background: #0a0a0b; padding: 10px; border-radius: 6px;
+            font-style: italic; font-size: 0.9rem; border-left: 3px solid var(--accent-blue); color: #ccc;
         }
 
         .card-footer {
-            padding: 1rem;
-            background: rgba(0,0,0,0.2);
-            border-top: 1px solid var(--border-muted);
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
+            padding: 1rem; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-muted);
+            display: flex; justify-content: space-between; font-size: 0.8rem;
         }
 
-        .driver-tag {
-            font-weight: 800;
-            color: var(--brand-gold);
-        }
+        .driver-tag { font-weight: 800; color: var(--brand-gold); }
 
-        .status-dot {
-            height: 8px;
-            width: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-        }
+        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
-        @media (max-width: 600px) {
-            .data-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 600px) { .data-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
+
+<div id="login-overlay">
+    <div class="login-box">
+        <h2 style="color: var(--brand-gold); margin-top:0;">EXECUTIVE ACCESS</h2>
+        <input type="email" id="login-user" class="login-input" placeholder="Admin Email" autofocus>
+        <input type="password" id="login-pin" class="login-input" placeholder="Password">
+        <button class="login-submit" onclick="attemptLogin()">Login</button>
+    </div>
+</div>
 
 <header>
     <div class="brand">
@@ -222,13 +177,13 @@
         <span class="brand-text">Executive Hub</span>
     </div>
     <div id="stats" style="font-size: 0.9rem; font-weight: 600;">
-        <span id="active-count" style="color: var(--brand-gold);">0</span> ACTIVE DISPATCHES
+        <span id="active-count" style="color: var(--brand-gold);">0</span> TOTAL RECORDS
     </div>
 </header>
 
 <div class="container">
     <div class="view-controls">
-        <input type="text" id="masterSearch" class="search-bar" placeholder="Search by Client, Address, Driver, or PO...">
+        <input type="text" id="masterSearch" class="search-bar" placeholder="Search Client, Address, Driver, or PO...">
         <select id="filterType" class="search-bar" style="flex: 0 0 150px;">
             <option value="all">All Types</option>
             <option value="pickup">Pickups</option>
@@ -236,133 +191,123 @@
         </select>
     </div>
 
-    <div id="dataGrid" class="data-grid">
-        </div>
+    <div id="dataGrid" class="data-grid"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-    const firebaseConfig = {
+    firebase.initializeApp({
         apiKey: "AIzaSyAKmgoXA4m3cRTmxJq4aUyva5SVvFbTNqg",
         authDomain: "eandccourier-36fcc.firebaseapp.com",
         databaseURL: "https://eandccourier-36fcc-default-rtdb.firebaseio.com",
         projectId: "eandccourier-36fcc"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    });
 
+    const db = firebase.database();
     let allJobs = [];
+
+    // --- AUTHENTICATION ---
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            const allowed = ["celeste@ec.com", "desirae@ec.com"];
+            if (allowed.includes(user.email.toLowerCase())) {
+                document.getElementById('login-overlay').style.display = 'none';
+                startDataSync();
+            } else {
+                alert("Unauthorized Access. This hub is restricted to Executives.");
+                firebase.auth().signOut();
+            }
+        } else {
+            document.getElementById('login-overlay').style.display = 'flex';
+        }
+    });
+
+    function attemptLogin() {
+        const email = document.getElementById('login-user').value.trim();
+        const pin = document.getElementById('login-pin').value.trim();
+        if(!email || !pin) return;
+        firebase.auth().signInWithEmailAndPassword(email, pin).catch(err => alert("Login Failed: " + err.message));
+    }
+
+    // --- DATA HANDLING ---
+    function startDataSync() {
+        db.ref('pickups').on('value', snap => {
+            const data = snap.val() || {};
+            const processed = Object.entries(data).map(([id, val]) => ({ ...val, id, type: 'pickup' }));
+            updateLocalStore('pickup', processed);
+        });
+
+        db.ref('dropoffs').on('value', snap => {
+            const data = snap.val() || {};
+            const processed = Object.entries(data).map(([id, val]) => ({ ...val, id, type: 'delivery' }));
+            updateLocalStore('delivery', processed);
+        });
+    }
+
+    function updateLocalStore(type, data) {
+        allJobs = allJobs.filter(j => j.type !== type).concat(data);
+        allJobs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        renderHub();
+    }
 
     function copyToClipboard(text, btn) {
         navigator.clipboard.writeText(text);
         const original = btn.innerText;
-        btn.innerText = "COPIED!";
-        setTimeout(() => btn.innerText = original, 1500);
-    }
-
-    function formatTime(ts) {
-        if(!ts) return "N/A";
-        return new Date(ts).toLocaleString('en-US', { 
-            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true 
-        });
+        btn.innerText = "COPIED";
+        setTimeout(() => btn.innerText = original, 1200);
     }
 
     function renderHub() {
         const grid = document.getElementById('dataGrid');
         const searchTerm = document.getElementById('masterSearch').value.toLowerCase();
         const typeFilter = document.getElementById('filterType').value;
-        
         grid.innerHTML = "";
-        
-        let filtered = allJobs.filter(j => {
-            const matchesSearch = JSON.stringify(j).toLowerCase().includes(searchTerm);
-            const matchesType = typeFilter === 'all' || j.type === typeFilter;
-            return matchesSearch && matchesType;
+
+        const filtered = allJobs.filter(j => {
+            const searchStr = `${j.name} ${j.delivery_name} ${j.pickup_location} ${j.destination} ${j.assigned_to} ${j.po_number}`.toLowerCase();
+            return searchStr.includes(searchTerm) && (typeFilter === 'all' || j.type === typeFilter);
         });
 
         document.getElementById('active-count').innerText = filtered.length;
 
         filtered.forEach(job => {
             const isPickup = job.type === 'pickup';
-            const accentColor = isPickup ? 'var(--accent-orange)' : 'var(--accent-green)';
+            const color = isPickup ? 'var(--accent-orange)' : 'var(--accent-green)';
+            const client = isPickup ? job.name : job.delivery_name;
+            const address = isPickup ? job.pickup_location : job.destination;
             
             const card = document.createElement('div');
             card.className = 'job-card';
-            
             card.innerHTML = `
                 <div class="card-header">
-                    <span class="type-badge" style="background: ${accentColor}; color: #000;">${job.type}</span>
-                    <span style="font-size: 0.7rem; color: var(--text-dim);">${formatTime(job.timestamp)}</span>
+                    <span class="type-badge" style="background:${color}; color:#000;">${job.type}</span>
+                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-dim);">${new Date(job.timestamp).toLocaleDateString()}</span>
                 </div>
                 <div class="card-body">
+                    <div class="data-row"><span class="label">CLIENT</span><div class="value">${client || 'N/A'}</div></div>
                     <div class="data-row">
-                        <span class="label">Primary Client / Contact</span>
-                        <div class="value">${isPickup ? (job.name || 'N/A') : (job.delivery_name || 'N/A')}</div>
+                        <span class="label">LOCATION <button class="copy-btn" onclick="copyToClipboard('${address}', this)">Copy</button></span>
+                        <div class="value">${address}</div>
+                        <div style="font-size:0.85rem; color:var(--brand-gold); font-weight:700; margin-top:2px;">${job.city || 'BRANDON'}</div>
                     </div>
-
-                    <div class="data-row">
-                        <span class="label">Service Location <button class="copy-btn" onclick="copyToClipboard('${isPickup ? job.pickup_location : job.destination}', this)">Copy</button></span>
-                        <div class="value">${isPickup ? job.pickup_location : job.destination}</div>
-                        <div style="font-size: 0.8rem; color: var(--brand-gold); font-weight: 700;">${job.city || 'Brandon'}</div>
-                    </div>
-
-                    <div class="data-row">
-                        <span class="label">Package Details</span>
-                        <div class="value" style="font-size: 0.9rem;">${job.package_details || '---'}</div>
-                    </div>
-
-                    ${job.po_number ? `
-                    <div class="data-row">
-                        <span class="label">PO / Reference <button class="copy-btn" onclick="copyToClipboard('${job.po_number}', this)">Copy</button></span>
-                        <div class="value" style="color: var(--accent-blue);">${job.po_number}</div>
-                    </div>` : ''}
-
-                    ${job.other_info ? `
-                    <div class="data-row">
-                        <span class="label">Administrative Notes</span>
-                        <div class="notes-box">${job.other_info}</div>
-                    </div>` : ''}
+                    <div class="data-row"><span class="label">PACKAGES</span><div class="value" style="font-size:0.9rem;">${job.package_details || '---'}</div></div>
+                    ${job.po_number ? `<div class="data-row"><span class="label">PO / REF <button class="copy-btn" onclick="copyToClipboard('${job.po_number}', this)">Copy</button></span><div class="value" style="color:var(--accent-blue);">${job.po_number}</div></div>` : ''}
+                    ${job.other_info ? `<div class="data-row"><span class="label">NOTES</span><div class="notes-box">${job.other_info}</div></div>` : ''}
                 </div>
                 <div class="card-footer">
-                    <div><span class="status-dot" style="background: ${job.status === 'completed' ? 'var(--accent-green)' : 'var(--brand-gold)'}"></span>${job.status.toUpperCase()}</div>
-                    <div class="driver-tag">${job.assigned_to && job.assigned_to !== 'Unassigned' ? job.assigned_to.toUpperCase() : 'PENDING'}</div>
+                    <div><span class="status-dot" style="background:${job.status === 'completed' ? 'var(--accent-green)' : 'var(--brand-gold)'}"></span>${job.status.toUpperCase()}</div>
+                    <div class="driver-tag">${(job.assigned_to || 'UNASSIGNED').toUpperCase()}</div>
                 </div>
             `;
             grid.appendChild(card);
         });
     }
 
-    // Data Sync
-    function initData() {
-        const pRef = db.ref('pickups');
-        const dRef = db.ref('dropoffs');
-
-        pRef.on('value', snap => {
-            const data = snap.val() || {};
-            const processed = Object.entries(data).map(([id, val]) => ({ ...val, id, type: 'pickup' }));
-            refreshLocalData('pickup', processed);
-        });
-
-        dRef.on('value', snap => {
-            const data = snap.val() || {};
-            const processed = Object.entries(data).map(([id, val]) => ({ ...val, id, type: 'delivery' }));
-            refreshLocalData('delivery', processed);
-        });
-    }
-
-    function refreshLocalData(type, data) {
-        allJobs = allJobs.filter(j => j.type !== type).concat(data);
-        allJobs.sort((a, b) => b.timestamp - a.timestamp);
-        renderHub();
-    }
-
     document.getElementById('masterSearch').addEventListener('input', renderHub);
     document.getElementById('filterType').addEventListener('change', renderHub);
-
-    initData();
 </script>
-
 </body>
 </html>
