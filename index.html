@@ -3,195 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E&C | Executive Data Hub</title>
+    <title>E&C | Executive Grid</title>
     <style>
         :root {
             --brand-gold: #cca300;
-            --bg-deep: #0a0a0b;
-            --card-bg: #141417;
-            --border-muted: #2d2d32;
-            --text-main: #e1e1e6;
-            --text-dim: #8b8b93;
-            --accent-blue: #0099cc;
-            --accent-green: #00b32d;
-            --accent-orange: #cc5200;
+            --bg-deep: #050505;
+            --table-bg: #0f0f12;
+            --border: #222;
+            --text: #e0e0e0;
+            --dim: #777;
+            --row-hover: #16161a;
+            --pickup-accent: #cc5200;
+            --delivery-accent: #00b32d;
         }
 
         * { box-sizing: border-box; }
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: var(--bg-deep);
-            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text);
             margin: 0;
-            line-height: 1.5;
-            overflow-x: hidden;
+            overflow: hidden; /* We will use internal scrolling for the grid */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* --- LOGIN OVERLAY --- */
+        /* --- AUTH OVERLAY --- */
         #login-overlay {
-            position: fixed; inset: 0; background: #050505; z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px;
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .login-box {
-            width: 100%; max-width: 380px; background: #111; padding: 40px; 
-            border-radius: 12px; border: 1px solid var(--border-muted); text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            width: 350px; background: #111; padding: 40px; border-radius: 8px; 
+            border: 1px solid var(--border); text-align: center;
         }
         .login-input {
-            width: 100%; padding: 14px; margin: 12px 0; background: #0a0a0a; 
-            border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 16px; outline: none;
+            width: 100%; padding: 12px; margin: 10px 0; background: #000; 
+            border: 1px solid #333; color: #fff; border-radius: 4px;
         }
-        .login-input:focus { border-color: var(--brand-gold); }
         .login-submit {
-            width: 100%; padding: 14px; margin-top: 20px; background: var(--brand-gold); 
-            border: none; color: #000; font-weight: 800; font-size: 16px; border-radius: 6px; 
-            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            width: 100%; padding: 12px; background: var(--brand-gold); border: none; 
+            color: #000; font-weight: 800; cursor: pointer; border-radius: 4px; margin-top: 10px;
         }
 
-        /* --- HEADER & ANIMATED LOGO --- */
+        /* --- HEADER --- */
         header {
-            background: rgba(10, 10, 11, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-muted);
-            padding: 1rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            padding: 10px 20px;
+            background: #000;
+            border-bottom: 2px solid var(--brand-gold);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
 
-        .brand { display: flex; align-items: center; gap: 15px; }
-
+        .logo-group { display: flex; align-items: center; gap: 15px; }
         .logo {
-            height: 45px;
-            filter: drop-shadow(0 0 5px rgba(204, 163, 0, 0.2));
-            animation: slowShine 8s infinite ease-in-out;
+            height: 40px;
+            filter: drop-shadow(0 0 5px rgba(204, 163, 0, 0.3));
+            animation: ultraSlowShine 10s infinite ease-in-out;
+        }
+        @keyframes ultraSlowShine {
+            0%, 100% { filter: drop-shadow(0 0 2px var(--brand-gold)); opacity: 0.8; }
+            50% { filter: drop-shadow(0 0 12px var(--brand-gold)); opacity: 1; }
+        }
+        .brand-title { font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #fff; font-size: 1.1rem; }
+
+        /* --- CONTROL BAR --- */
+        .controls {
+            padding: 15px 20px;
+            background: #0a0a0c;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
         }
 
-        @keyframes slowShine {
-            0%, 100% { filter: drop-shadow(0 0 2px var(--brand-gold)); transform: scale(1); opacity: 0.9; }
-            50% { filter: drop-shadow(0 0 15px var(--brand-gold)); transform: scale(1.03); opacity: 1; }
+        .filter-input {
+            background: #111; border: 1px solid #333; color: #fff;
+            padding: 8px 12px; border-radius: 4px; font-size: 0.9rem;
+        }
+        .filter-input:focus { border-color: var(--brand-gold); outline: none; }
+
+        /* --- DATA GRID --- */
+        .grid-container {
+            flex: 1;
+            overflow: auto;
+            background: var(--bg-deep);
         }
 
-        .brand-text {
-            font-size: 1.2rem;
-            font-weight: 800;
-            letter-spacing: 2px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 1200px;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: #1a1a1d;
+            z-index: 10;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            color: var(--dim);
             text-transform: uppercase;
-            background: linear-gradient(90deg, #fff, var(--brand-gold), #fff);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            animation: textShimmer 10s linear infinite;
+            font-weight: 800;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--brand-gold);
+            white-space: nowrap;
         }
 
-        @keyframes textShimmer { to { background-position: 200% center; } }
-
-        /* --- LAYOUT --- */
-        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
-
-        .view-controls {
-            display: flex; gap: 1rem; margin-bottom: 2rem; background: var(--card-bg);
-            padding: 1rem; border-radius: 12px; border: 1px solid var(--border-muted);
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
         }
 
-        .search-bar {
-            flex: 1; background: #1c1c21; border: 1px solid var(--border-muted);
-            padding: 0.8rem 1.2rem; border-radius: 8px; color: white; font-size: 1rem;
-        }
-
-        /* --- DATA CARDS --- */
-        .data-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1.5rem;
-        }
-
-        .job-card {
-            background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-muted);
-            overflow: hidden; transition: transform 0.2s, border-color 0.2s;
-            display: flex; flex-direction: column;
-        }
-
-        .job-card:hover { border-color: var(--brand-gold); transform: translateY(-4px); }
-
-        .card-header {
-            padding: 1rem; background: rgba(255,255,255,0.03);
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border-muted);
-        }
-
-        .type-badge { font-size: 0.7rem; font-weight: 900; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; }
-
-        .card-body { padding: 1.5rem; flex: 1; }
-
-        .data-row { margin-bottom: 1.2rem; position: relative; }
-
-        .label {
-            font-size: 0.65rem; font-weight: 800; color: var(--text-dim);
-            text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;
-        }
-
-        .value { font-size: 1rem; font-weight: 600; color: var(--text-main); word-break: break-word; }
+        tr:hover { background: var(--row-hover); }
 
         .copy-btn {
-            background: #2d2d32; border: none; color: var(--brand-gold);
-            font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; cursor: pointer;
-            margin-left: 8px; text-transform: uppercase; vertical-align: middle;
+            background: transparent; border: 1px solid #444; color: var(--brand-gold);
+            padding: 2px 6px; font-size: 10px; cursor: pointer; border-radius: 3px;
+            margin-left: 5px; opacity: 0.6; transition: 0.2s;
+        }
+        .copy-btn:hover { opacity: 1; background: var(--brand-gold); color: #000; }
+
+        .type-tag {
+            padding: 3px 8px; border-radius: 3px; font-weight: 900; font-size: 10px;
         }
 
-        .copy-btn:hover { background: var(--brand-gold); color: black; }
-
-        .notes-box {
-            background: #0a0a0b; padding: 10px; border-radius: 6px;
-            font-style: italic; font-size: 0.9rem; border-left: 3px solid var(--accent-blue); color: #ccc;
+        .notes-cell {
+            max-width: 250px;
+            font-style: italic;
+            color: #aaa;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
         }
+        .notes-cell:hover { white-space: normal; overflow: visible; background: #222; position: relative; z-index: 5; }
 
-        .card-footer {
-            padding: 1rem; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-muted);
-            display: flex; justify-content: space-between; font-size: 0.8rem;
-        }
-
-        .driver-tag { font-weight: 800; color: var(--brand-gold); }
-
-        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-
-        @media (max-width: 600px) { .data-grid { grid-template-columns: 1fr; } }
+        .date-cell { white-space: nowrap; font-family: monospace; color: var(--dim); }
+        .driver-cell { font-weight: 800; color: var(--brand-gold); }
     </style>
 </head>
 <body>
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2 style="color: var(--brand-gold); margin-top:0;">EXECUTIVE ACCESS</h2>
+        <h2 style="color: var(--brand-gold); margin-bottom: 20px;">EXECUTIVE GRID</h2>
         <input type="email" id="login-user" class="login-input" placeholder="Admin Email" autofocus>
         <input type="password" id="login-pin" class="login-input" placeholder="Password">
-        <button class="login-submit" onclick="attemptLogin()">Login</button>
+        <button class="login-submit" onclick="attemptLogin()">Authorize</button>
     </div>
 </div>
 
 <header>
-    <div class="brand">
+    <div class="logo-group">
         <img src="icon-512.png" class="logo" alt="Logo">
-        <span class="brand-text">Executive Hub</span>
+        <span class="brand-title">E&C | Executive Data Hub</span>
     </div>
-    <div id="stats" style="font-size: 0.9rem; font-weight: 600;">
-        <span id="active-count" style="color: var(--brand-gold);">0</span> TOTAL RECORDS
+    <div id="live-stat" style="font-size: 0.8rem; font-weight: 800; color: var(--dim);">
+        <span id="counter" style="color: var(--brand-gold);">0</span> ENTRIES FOUND
     </div>
 </header>
 
-<div class="container">
-    <div class="view-controls">
-        <input type="text" id="masterSearch" class="search-bar" placeholder="Search Client, Address, Driver, or PO...">
-        <select id="filterType" class="search-bar" style="flex: 0 0 150px;">
-            <option value="all">All Types</option>
-            <option value="pickup">Pickups</option>
-            <option value="delivery">Deliveries</option>
+<div class="controls">
+    <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size: 10px; font-weight: 800; color: var(--dim);">GLOBAL SEARCH</label>
+        <input type="text" id="globalSearch" class="filter-input" style="width: 250px;" placeholder="Filter everything...">
+    </div>
+    
+    <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size: 10px; font-weight: 800; color: var(--dim);">DATE FROM</label>
+        <input type="date" id="dateFrom" class="filter-input">
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size: 10px; font-weight: 800; color: var(--dim);">DATE TO</label>
+        <input type="date" id="dateTo" class="filter-input">
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size: 10px; font-weight: 800; color: var(--dim);">TYPE</label>
+        <select id="typeFilter" class="filter-input">
+            <option value="all">ALL SERVICES</option>
+            <option value="pickup">PICKUPS</option>
+            <option value="delivery">DELIVERIES</option>
         </select>
     </div>
 
-    <div id="dataGrid" class="data-grid"></div>
+    <button onclick="clearFilters()" style="margin-top: 18px; background: transparent; border: 1px solid #444; color: #fff; padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">RESET</button>
+</div>
+
+<div class="grid-container">
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Driver</th>
+                <th>Client / Business</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>PO / Ref</th>
+                <th>Packages</th>
+                <th>Status</th>
+                <th>Admin Notes</th>
+            </tr>
+        </thead>
+        <tbody id="gridBody">
+            </tbody>
+    </table>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -207,107 +236,103 @@
     });
 
     const db = firebase.database();
-    let allJobs = [];
+    let masterData = [];
 
-    // --- AUTHENTICATION ---
-    firebase.auth().onAuthStateChanged((user) => {
+    // --- ACCESS CONTROL ---
+    firebase.auth().onAuthStateChanged(user => {
         if (user) {
-            const allowed = ["celeste@ec.com", "desirae@ec.com"];
-            if (allowed.includes(user.email.toLowerCase())) {
+            const admins = ["celeste@ec.com", "desirae@ec.com"];
+            if (admins.includes(user.email.toLowerCase())) {
                 document.getElementById('login-overlay').style.display = 'none';
-                startDataSync();
+                initSync();
             } else {
-                alert("Unauthorized Access. This hub is restricted to Executives.");
+                alert("Restricted Access.");
                 firebase.auth().signOut();
             }
-        } else {
-            document.getElementById('login-overlay').style.display = 'flex';
         }
     });
 
     function attemptLogin() {
         const email = document.getElementById('login-user').value.trim();
         const pin = document.getElementById('login-pin').value.trim();
-        if(!email || !pin) return;
-        firebase.auth().signInWithEmailAndPassword(email, pin).catch(err => alert("Login Failed: " + err.message));
+        firebase.auth().signInWithEmailAndPassword(email, pin).catch(e => alert(e.message));
     }
 
-    // --- DATA HANDLING ---
-    function startDataSync() {
-        db.ref('pickups').on('value', snap => {
-            const data = snap.val() || {};
-            const processed = Object.entries(data).map(([id, val]) => ({ ...val, id, type: 'pickup' }));
-            updateLocalStore('pickup', processed);
-        });
-
-        db.ref('dropoffs').on('value', snap => {
-            const data = snap.val() || {};
-            const processed = Object.entries(data).map(([id, val]) => ({ ...val, id, type: 'delivery' }));
-            updateLocalStore('delivery', processed);
-        });
+    // --- DATA FLOW ---
+    function initSync() {
+        db.ref('pickups').on('value', s => stream('pickup', s.val()));
+        db.ref('dropoffs').on('value', s => stream('delivery', s.val()));
     }
 
-    function updateLocalStore(type, data) {
-        allJobs = allJobs.filter(j => j.type !== type).concat(data);
-        allJobs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        renderHub();
+    function stream(type, data) {
+        const processed = Object.entries(data || {}).map(([id, val]) => ({ ...val, id, type }));
+        masterData = masterData.filter(i => i.type !== type).concat(processed);
+        masterData.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+        applyFilters();
     }
 
-    function copyToClipboard(text, btn) {
-        navigator.clipboard.writeText(text);
+    function copyVal(val, btn) {
+        navigator.clipboard.writeText(val);
         const original = btn.innerText;
-        btn.innerText = "COPIED";
-        setTimeout(() => btn.innerText = original, 1200);
+        btn.innerText = "OK";
+        setTimeout(() => btn.innerText = original, 1000);
     }
 
-    function renderHub() {
-        const grid = document.getElementById('dataGrid');
-        const searchTerm = document.getElementById('masterSearch').value.toLowerCase();
-        const typeFilter = document.getElementById('filterType').value;
-        grid.innerHTML = "";
+    function clearFilters() {
+        document.getElementById('globalSearch').value = "";
+        document.getElementById('dateFrom').value = "";
+        document.getElementById('dateTo').value = "";
+        document.getElementById('typeFilter').value = "all";
+        applyFilters();
+    }
 
-        const filtered = allJobs.filter(j => {
-            const searchStr = `${j.name} ${j.delivery_name} ${j.pickup_location} ${j.destination} ${j.assigned_to} ${j.po_number}`.toLowerCase();
-            return searchStr.includes(searchTerm) && (typeFilter === 'all' || j.type === typeFilter);
-        });
-
-        document.getElementById('active-count').innerText = filtered.length;
-
-        filtered.forEach(job => {
-            const isPickup = job.type === 'pickup';
-            const color = isPickup ? 'var(--accent-orange)' : 'var(--accent-green)';
-            const client = isPickup ? job.name : job.delivery_name;
-            const address = isPickup ? job.pickup_location : job.destination;
+    function applyFilters() {
+        const search = document.getElementById('globalSearch').value.toLowerCase();
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+        const type = document.getElementById('typeFilter').value;
+        const body = document.getElementById('gridBody');
+        
+        body.innerHTML = "";
+        
+        const filtered = masterData.filter(item => {
+            const ts = item.timestamp || 0;
+            const itemDate = new Date(ts).toISOString().split('T')[0];
             
-            const card = document.createElement('div');
-            card.className = 'job-card';
-            card.innerHTML = `
-                <div class="card-header">
-                    <span class="type-badge" style="background:${color}; color:#000;">${job.type}</span>
-                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-dim);">${new Date(job.timestamp).toLocaleDateString()}</span>
-                </div>
-                <div class="card-body">
-                    <div class="data-row"><span class="label">CLIENT</span><div class="value">${client || 'N/A'}</div></div>
-                    <div class="data-row">
-                        <span class="label">LOCATION <button class="copy-btn" onclick="copyToClipboard('${address}', this)">Copy</button></span>
-                        <div class="value">${address}</div>
-                        <div style="font-size:0.85rem; color:var(--brand-gold); font-weight:700; margin-top:2px;">${job.city || 'BRANDON'}</div>
-                    </div>
-                    <div class="data-row"><span class="label">PACKAGES</span><div class="value" style="font-size:0.9rem;">${job.package_details || '---'}</div></div>
-                    ${job.po_number ? `<div class="data-row"><span class="label">PO / REF <button class="copy-btn" onclick="copyToClipboard('${job.po_number}', this)">Copy</button></span><div class="value" style="color:var(--accent-blue);">${job.po_number}</div></div>` : ''}
-                    ${job.other_info ? `<div class="data-row"><span class="label">NOTES</span><div class="notes-box">${job.other_info}</div></div>` : ''}
-                </div>
-                <div class="card-footer">
-                    <div><span class="status-dot" style="background:${job.status === 'completed' ? 'var(--accent-green)' : 'var(--brand-gold)'}"></span>${job.status.toUpperCase()}</div>
-                    <div class="driver-tag">${(job.assigned_to || 'UNASSIGNED').toUpperCase()}</div>
-                </div>
+            const matchSearch = JSON.stringify(item).toLowerCase().includes(search);
+            const matchType = type === 'all' || item.type === type;
+            const matchFrom = !from || itemDate >= from;
+            const matchTo = !to || itemDate <= to;
+            
+            return matchSearch && matchType && matchFrom && matchTo;
+        });
+
+        document.getElementById('counter').innerText = filtered.length;
+
+        filtered.forEach(item => {
+            const isP = item.type === 'pickup';
+            const client = isP ? item.name : item.delivery_name;
+            const addr = isP ? item.pickup_location : item.destination;
+            const tr = document.createElement('tr');
+            
+            tr.innerHTML = `
+                <td class="date-cell">${new Date(item.timestamp).toLocaleDateString()}</td>
+                <td><span class="type-tag" style="background:${isP ? 'var(--pickup-accent)' : 'var(--delivery-accent)'}; color:#000;">${item.type}</span></td>
+                <td class="driver-cell">${(item.assigned_to || '---').toUpperCase()}</td>
+                <td style="font-weight:700;">${client || 'N/A'}</td>
+                <td>${addr} <button class="copy-btn" onclick="copyVal('${addr}', this)">Copy</button></td>
+                <td style="color:var(--brand-gold); font-weight:700;">${item.city || 'BRANDON'}</td>
+                <td><span style="color:var(--dim); font-weight:bold;">${item.po_number || ''}</span> ${item.po_number ? `<button class="copy-btn" onclick="copyVal('${item.po_number}', this)">Copy</button>` : ''}</td>
+                <td>${item.package_details || ''}</td>
+                <td style="font-weight:900; font-size:10px; color:${item.status === 'completed' ? 'var(--delivery-accent)' : 'var(--brand-gold)'}">${item.status.toUpperCase()}</td>
+                <td class="notes-cell">${item.other_info || ''}</td>
             `;
-            grid.appendChild(card);
+            body.appendChild(tr);
         });
     }
 
-    document.getElementById('masterSearch').addEventListener('input', renderHub);
-    document.getElementById('filterType').addEventListener('change', renderHub);
+    document.querySelectorAll('.filter-input').forEach(el => el.addEventListener('input', applyFilters));
 </script>
+
 </body>
 </html>
