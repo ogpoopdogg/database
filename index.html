@@ -208,10 +208,11 @@
             .col-1::before { content: "Type"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
             .col-2::before { content: "Driver"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
             .col-3::before { content: "Pickup Contact"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
-            .col-4::before { content: "Delivery Contact"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
-            .col-5::before { content: "Address"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
-            .col-6::before { content: "City"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
-            .col-7::before { content: "Packages"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
+            .col-4::before { content: "Pickup Address"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
+            .col-5::before { content: "Delivery Contact"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
+            .col-6::before { content: "Delivery Address"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
+            .col-7::before { content: "City"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
+            .col-8::before { content: "Packages"; color: var(--dim); font-weight: 800; font-size: 10px; text-transform: uppercase; }
 
             /* Detail Row Reset */
             .details-row[style*="table-row"] { display: block !important; }
@@ -294,10 +295,11 @@
                 <th class="col-1">Type</th>
                 <th class="col-2">Driver</th>
                 <th class="col-3">Pickup Contact</th>
-                <th class="col-4">Delivery Contact</th>
-                <th class="col-5">Address</th>
-                <th class="col-6">City</th>
-                <th class="col-7">Packages</th>
+                <th class="col-4">Pickup Address</th>
+                <th class="col-5">Delivery Contact</th>
+                <th class="col-6">Delivery Address</th>
+                <th class="col-7">City</th>
+                <th class="col-8">Packages</th>
             </tr>
         </thead>
         <tbody id="gridBody">
@@ -325,9 +327,9 @@
 
     // Column Config
     const columnConfig = [
-        "Date", "Type", "Driver", "Pickup Contact", "Delivery Contact", "Address", "City", "Packages"
+        "Date", "Type", "Driver", "Pickup Contact", "Pickup Address", "Delivery Contact", "Delivery Address", "City", "Packages"
     ];
-    let visibleCols = new Array(8).fill(true);
+    let visibleCols = new Array(9).fill(true);
 
     // --- INIT ---
     document.addEventListener("DOMContentLoaded", () => {
@@ -585,17 +587,18 @@
                 <td class="col-1"><span class="type-tag" style="background:${isP ? 'var(--pickup-accent)' : 'var(--delivery-accent)'}; color:#000;">${item.type}</span></td>
                 <td class="col-2 driver-cell">${(item.assigned_to || '---').toUpperCase()}</td>
                 <td class="col-3" style="font-weight:700;">${pickupName}</td>
-                <td class="col-4" style="font-weight:700;">${delivName}</td>
-                <td class="col-5"><span class="copy-icon" onclick="copyLine(this, '${lineData.replace(/'/g, "\\'")}')">📋</span> ${mainAddr}</td>
-                <td class="col-6" style="color:var(--brand-gold); font-weight:700;">${item.city || 'BRANDON'}</td>
-                <td class="col-7">${item.package_details || ''}</td>
+                <td class="col-4">${item.pickup_location || ''}</td>
+                <td class="col-5" style="font-weight:700;">${delivName}</td>
+                <td class="col-6">${item.destination || ''}</td>
+                <td class="col-7" style="color:var(--brand-gold); font-weight:700;">${item.city || 'BRANDON'}</td>
+                <td class="col-8">${item.package_details || ''}</td>
             `;
             
             const detailTr = document.createElement('tr');
             detailTr.id = 'detail-' + item.id;
             detailTr.className = 'details-row';
             detailTr.innerHTML = `
-                <td colspan="8">
+                <td colspan="9">
                     <div class="details-content">
                         <div class="detail-group">
                             <span class="detail-label">PO / REFERENCE</span>
