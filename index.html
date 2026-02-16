@@ -90,7 +90,7 @@
 
         .range-btn {
             background: #111; border: 1px solid #333; color: var(--dim);
-            padding: 8px 12px; border-radius: 4px; font-size: 1.2rem; font-weight: 700; cursor: pointer;
+            padding: 8px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
             transition: 0.2s;
         }
         .range-btn:hover, .range-btn.active { border-color: var(--brand-gold); color: #fff; background: #222; }
@@ -166,8 +166,8 @@
         .driver-cell { font-weight: 800; color: var(--brand-gold); }
 
         /* --- VISIBILITY TOGGLES --- */
-        .col-toggle-group { display: flex; gap: 8px; flex-wrap: wrap; max-width: 300px; margin-top: 5px; }
-        .col-checkbox { display: flex; align-items: center; gap: 3px; font-size: 9px; color: var(--dim); font-weight: 700; cursor: pointer; }
+        .col-toggle-group { display: flex; gap: 15px; width: 100%; margin-top: 10px; }
+        .col-checkbox { display: flex; align-items: center; gap: 3px; font-size: 14px; color: var(--dim); font-weight: 700; cursor: pointer; }
         .col-checkbox input { accent-color: var(--brand-gold); cursor: pointer; }
         .hide-col { display: none !important; }
 
@@ -224,7 +224,6 @@
     <div style="display:flex; flex-direction:column; gap:4px;">
         <label style="font-size: 10px; font-weight: 800; color: var(--dim);">GLOBAL SEARCH</label>
         <input type="text" id="globalSearch" class="filter-input" style="width: 250px;" placeholder="Filter everything...">
-        <div id="columnToggles" class="col-toggle-group"></div>
     </div>
     
     <div style="display:flex; flex-direction:column; gap:4px;">
@@ -239,26 +238,28 @@
 
     <div style="display:flex; flex-direction:column; gap:4px;">
         <label style="font-size: 10px; font-weight: 800; color: var(--dim);">TYPE</label>
-        <select id="typeFilter" class="filter-input">
-            <option value="all">ALL SERVICES</option>
-            <option value="pickup">PICKUPS</option>
-            <option value="delivery">DELIVERIES</option>
-        </select>
         <div style="display:flex; gap: 5px; align-items: center;">
+            <select id="typeFilter" class="filter-input">
+                <option value="all">ALL SERVICES</option>
+                <option value="pickup">PICKUPS</option>
+                <option value="delivery">DELIVERIES</option>
+            </select>
             <button class="range-btn" onclick="updateRange(7)">Last 7 Days</button>
             <button class="range-btn" onclick="updateRange(14)">Last 14 Days</button>
             <button class="range-btn" onclick="updateRange(30)">Last 30 Days</button>
             <button class="range-btn" onclick="updateRange(90)">Last 3 Months</button>
             <button class="range-btn" onclick="updateRange(180)">Last 6 Months</button>
             <button class="range-btn" onclick="updateRange('all')">All Time</button>
-            <button onclick="clearFilters()" style="background: transparent; border: 1px solid #444; color: #fff; padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 18px;">RESET</button>
         </div>
     </div>
+
+    <button onclick="clearFilters()" style="margin-top: 18px; background: transparent; border: 1px solid #444; color: #fff; padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">RESET</button>
     
     <div style="margin-left: auto; display: flex; gap: 10px;">
         <button onclick="exportCurrentView()" class="print-btn" style="border-color: #555; color: #fff;">EXPORT TXT</button>
         <button onclick="printAndDownload()" class="print-btn">PRINT PAGE</button>
     </div>
+    <div id="columnToggles" class="col-toggle-group"></div>
 </div>
 
 <div class="grid-container">
