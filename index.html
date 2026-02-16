@@ -56,6 +56,7 @@
             justify-content: space-between;
             align-items: center;
             flex-shrink: 0;
+            position: relative;
         }
 
         .logo-group { display: flex; align-items: center; gap: 15px; }
@@ -95,7 +96,7 @@
         .range-btn:hover, .range-btn.active { border-color: var(--brand-gold); color: #fff; background: #222; }
 
         .print-btn {
-            margin-left: auto; background: #222; border: 1px solid var(--brand-gold); color: var(--brand-gold);
+            background: #222; border: 1px solid var(--brand-gold); color: var(--brand-gold);
             padding: 8px 15px; border-radius: 4px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 0.8rem;
         }
         .print-btn:hover { background: var(--brand-gold); color: #000; }
@@ -163,6 +164,35 @@
         }
         .date-cell { white-space: nowrap; font-family: monospace; color: var(--dim); }
         .driver-cell { font-weight: 800; color: var(--brand-gold); }
+
+        /* --- VISIBILITY TOGGLES --- */
+        .col-toggle-group { display: flex; gap: 8px; flex-wrap: wrap; max-width: 300px; margin-top: 5px; }
+        .col-checkbox { display: flex; align-items: center; gap: 3px; font-size: 9px; color: var(--dim); font-weight: 700; cursor: pointer; }
+        .col-checkbox input { accent-color: var(--brand-gold); cursor: pointer; }
+        .hide-col { display: none !important; }
+
+        /* --- PRINT STYLES --- */
+        @media print {
+            body { height: auto; overflow: visible; background: #fff; color: #000; }
+            .grid-container { overflow: visible; height: auto; }
+            .controls, header, #login-overlay, .copy-icon, .copy-btn-lg { display: none !important; }
+            
+            table { width: 100%; border-collapse: collapse; min-width: 0; font-size: 10px; }
+            th { background: #fff; color: #000; border-bottom: 2px solid #000; position: static; }
+            td { color: #000; border-bottom: 1px solid #ccc; }
+            
+            /* Force all details to show */
+            .details-row { display: table-row !important; }
+            .details-content { display: flex !important; gap: 20px; border-bottom: 1px solid #000; padding: 10px; }
+            .detail-label { color: #444; }
+            .detail-value { color: #000; font-weight: 600; }
+            
+            /* Force all columns to be visible when printing regardless of checkbox state */
+            .hide-col { display: table-cell !important; }
+            
+            /* Adjust badges */
+            .type-tag { border: 1px solid #000; }
+        }
     </style>
 </head>
 <body>
@@ -181,6 +211,9 @@
         <img src="icon-512.png" class="logo" alt="Logo">
         <span class="brand-title">E&C | Executive Data Hub</span>
     </div>
+    
+    <button onclick="manualBackup()" class="print-btn" style="position: absolute; left: 50%; transform: translateX(-50%);">BACK UP NOW</button>
+
     <div id="live-stat" style="font-size: 0.8rem; font-weight: 800; color: var(--dim); text-align: right;">
         <div id="backup-stat" style="color: #444; font-size: 10px; margin-bottom: 3px;">Last Backup: N/A</div>
         <span id="counter" style="color: var(--brand-gold);">0</span> ENTRIES FOUND
@@ -191,6 +224,7 @@
     <div style="display:flex; flex-direction:column; gap:4px;">
         <label style="font-size: 10px; font-weight: 800; color: var(--dim);">GLOBAL SEARCH</label>
         <input type="text" id="globalSearch" class="filter-input" style="width: 250px;" placeholder="Filter everything...">
+        <div id="columnToggles" class="col-toggle-group"></div>
     </div>
     
     <div style="display:flex; flex-direction:column; gap:4px;">
@@ -221,21 +255,24 @@
 
     <button onclick="clearFilters()" style="margin-top: 18px; background: transparent; border: 1px solid #444; color: #fff; padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">RESET</button>
     
-    <button onclick="printAndDownload()" class="print-btn">PRINT PAGE</button>
+    <div style="margin-left: auto; display: flex; gap: 10px;">
+        <button onclick="exportCurrentView()" class="print-btn" style="border-color: #555; color: #fff;">EXPORT TXT</button>
+        <button onclick="printAndDownload()" class="print-btn">PRINT PAGE</button>
+    </div>
 </div>
 
 <div class="grid-container">
     <table id="dataTable">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Driver</th>
-                <th>Pickup Contact</th>
-                <th>Delivery Contact</th>
-                <th>Address</th>
-                <th>City</th>
-                <th>Packages</th>
+                <th class="col-0">Date</th>
+                <th class="col-1">Type</th>
+                <th class="col-2">Driver</th>
+                <th class="col-3">Pickup Contact</th>
+                <th class="col-4">Delivery Contact</th>
+                <th class="col-5">Address</th>
+                <th class="col-6">City</th>
+                <th class="col-7">Packages</th>
             </tr>
         </thead>
         <tbody id="gridBody">
@@ -257,8 +294,50 @@
 
     const db = firebase.database();
     let masterData = [];
+    let filteredData = []; // Store currently visible data
     let currentRange = 7; // Default 7 days
     const listeners = { pickups: null, dropoffs: null };
+
+    // Column Config
+    const columnConfig = [
+        "Date", "Type", "Driver", "Pickup Contact", "Delivery Contact", "Address", "City", "Packages"
+    ];
+    let visibleCols = new Array(8).fill(true);
+
+    // --- INIT ---
+    document.addEventListener("DOMContentLoaded", () => {
+        renderColumnToggles();
+    });
+
+    function renderColumnToggles() {
+        const container = document.getElementById('columnToggles');
+        container.innerHTML = "";
+        columnConfig.forEach((col, idx) => {
+            const label = document.createElement('label');
+            label.className = "col-checkbox";
+            label.innerHTML = `<input type="checkbox" checked onchange="toggleColumn(${idx}, this.checked)"> ${col.toUpperCase()}`;
+            container.appendChild(label);
+        });
+    }
+
+    function toggleColumn(idx, isVisible) {
+        visibleCols[idx] = isVisible;
+        const styleId = `style-col-${idx}`;
+        let styleTag = document.getElementById(styleId);
+        
+        if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = styleId;
+            document.head.appendChild(styleTag);
+        }
+
+        // Toggle visibility using CSS class injection
+        if (!isVisible) {
+            styleTag.innerHTML = `.col-${idx} { display: none; }`;
+        } else {
+            styleTag.innerHTML = "";
+        }
+    }
 
     // --- ACCESS CONTROL ---
     firebase.auth().onAuthStateChanged(user => {
@@ -319,6 +398,33 @@
         applyFilters();
     }
 
+    // --- BACKUP & EXPORT SYSTEM ---
+    
+    function generateFileContent(dataArray, title) {
+        if (dataArray.length === 0) return "No Data Found.";
+        let textContent = `${title}\nDate Generated: ${new Date().toLocaleString()}\nEntries: ${dataArray.length}\n----------------------------------------\n\n`;
+        
+        dataArray.forEach(item => {
+            textContent += `ID: ${item.id}\nDate: ${new Date(item.timestamp).toLocaleString()}\nType: ${item.type.toUpperCase()}\nDriver: ${item.assigned_to}\nPickup: ${item.name || 'N/A'}\nDelivery: ${item.delivery_name || 'N/A'}\nAddr: ${item.pickup_location || item.destination}\nCity: ${item.city}\nPO: ${item.po_number}\nStatus: ${item.status}\nDetails: ${item.package_details}\nNotes: ${item.other_info}\nUser: ${item.created_by || '?'} / ${item.last_edit_by || '?'}\n\n----------------------------------------\n\n`;
+        });
+        return textContent;
+    }
+
+    function downloadTextFile(filename, content) {
+        const blob = new Blob([content], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+    }
+
+    function getBackupFilename(startMs, endMs) {
+        const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+        const s = new Date(startMs);
+        const e = new Date(endMs);
+        return `backup_${months[s.getMonth()]}${s.getDate()}_${months[e.getMonth()]}${e.getDate()}.txt`;
+    }
+
     function checkAutoBackup() {
         const lastBackup = localStorage.getItem('ec_last_backup');
         const now = new Date();
@@ -328,37 +434,49 @@
             document.getElementById('backup-stat').innerText = "Last Backup: " + new Date(lastBackup).toDateString();
         }
 
-        // Check if it's Friday and 7 days have passed since last backup (or no backup exists)
         const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
         const timeSince = lastBackup ? now - new Date(lastBackup) : Infinity;
 
-        if (isFriday && timeSince > (sevenDaysMs - 86400000)) { // Allow a bit of leeway within Friday
-            downloadData();
-            localStorage.setItem('ec_last_backup', now.toISOString());
-            document.getElementById('backup-stat').innerText = "Last Backup: " + now.toDateString();
+        if (isFriday && timeSince > (sevenDaysMs - 86400000)) { 
+            backupLast7Days(true);
         }
     }
 
-    function downloadData() {
-        if (masterData.length === 0) return;
-        let textContent = "E&C EXECUTIVE DATA BACKUP\nDate: " + new Date().toLocaleString() + "\nEntries: " + masterData.length + "\n----------------------------------------\n\n";
+    function backupLast7Days(isAuto = false) {
+        const now = Date.now();
+        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
         
-        masterData.forEach(item => {
-            textContent += `ID: ${item.id}\nDate: ${new Date(item.timestamp).toLocaleString()}\nType: ${item.type.toUpperCase()}\nDriver: ${item.assigned_to}\nPickup: ${item.name || 'N/A'}\nDelivery: ${item.delivery_name || 'N/A'}\nAddr: ${item.pickup_location || item.destination}\nCity: ${item.city}\nPO: ${item.po_number}\nStatus: ${item.status}\nDetails: ${item.package_details}\nNotes: ${item.other_info}\nUser: ${item.created_by || '?'} / ${item.last_edit_by || '?'}\n\n----------------------------------------\n\n`;
+        // We need to fetch/filter from masterData based on strict timestamp
+        const backupData = masterData.filter(item => {
+            return item.timestamp >= sevenDaysAgo && item.timestamp <= now;
         });
 
-        const blob = new Blob([textContent], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `EC_Backup_${new Date().toISOString().split('T')[0]}.txt`;
-        a.click();
+        const filename = getBackupFilename(sevenDaysAgo, now);
+        const content = generateFileContent(backupData, "E&C EXECUTIVE DATA BACKUP (7 DAYS)");
+        
+        downloadTextFile(filename, content);
+
+        if (isAuto) {
+            localStorage.setItem('ec_last_backup', new Date().toISOString());
+            document.getElementById('backup-stat').innerText = "Last Backup: " + new Date().toDateString();
+        }
+    }
+
+    function manualBackup() {
+        backupLast7Days(false);
+    }
+
+    function exportCurrentView() {
+        const content = generateFileContent(filteredData, "E&C EXPORT - CURRENT VIEW");
+        downloadTextFile(`EC_Export_${new Date().toISOString().split('T')[0]}.txt`, content);
     }
 
     function printAndDownload() {
-        downloadData();
         window.print();
+        // Removed downloadData() call
     }
 
+    // --- UI HELPERS ---
     function copyLine(btn, dataStr) {
         navigator.clipboard.writeText(dataStr).then(() => {
             const span = document.createElement('span');
@@ -409,7 +527,7 @@
         
         body.innerHTML = "";
         
-        const filtered = masterData.filter(item => {
+        filteredData = masterData.filter(item => {
             const ts = item.timestamp || 0;
             const itemDate = new Date(ts).toISOString().split('T')[0];
             
@@ -421,9 +539,9 @@
             return matchSearch && matchType && matchFrom && matchTo;
         });
 
-        document.getElementById('counter').innerText = filtered.length;
+        document.getElementById('counter').innerText = filteredData.length;
 
-        filtered.forEach(item => {
+        filteredData.forEach(item => {
             const isP = item.type === 'pickup';
             const pickupName = item.name || 'N/A';
             const delivName = item.delivery_name || 'N/A';
@@ -436,15 +554,16 @@
             tr.className = "summary-row";
             tr.onclick = () => toggleDetails(item.id);
             
+            // Added classes col-0 to col-7 for column toggling
             tr.innerHTML = `
-                <td class="date-cell">${new Date(item.timestamp).toLocaleDateString()}</td>
-                <td><span class="type-tag" style="background:${isP ? 'var(--pickup-accent)' : 'var(--delivery-accent)'}; color:#000;">${item.type}</span></td>
-                <td class="driver-cell">${(item.assigned_to || '---').toUpperCase()}</td>
-                <td style="font-weight:700;">${pickupName}</td>
-                <td style="font-weight:700;">${delivName}</td>
-                <td><span class="copy-icon" onclick="copyLine(this, '${lineData.replace(/'/g, "\\'")}')">📋</span> ${mainAddr}</td>
-                <td style="color:var(--brand-gold); font-weight:700;">${item.city || 'BRANDON'}</td>
-                <td>${item.package_details || ''}</td>
+                <td class="col-0 date-cell">${new Date(item.timestamp).toLocaleDateString()}</td>
+                <td class="col-1"><span class="type-tag" style="background:${isP ? 'var(--pickup-accent)' : 'var(--delivery-accent)'}; color:#000;">${item.type}</span></td>
+                <td class="col-2 driver-cell">${(item.assigned_to || '---').toUpperCase()}</td>
+                <td class="col-3" style="font-weight:700;">${pickupName}</td>
+                <td class="col-4" style="font-weight:700;">${delivName}</td>
+                <td class="col-5"><span class="copy-icon" onclick="copyLine(this, '${lineData.replace(/'/g, "\\'")}')">📋</span> ${mainAddr}</td>
+                <td class="col-6" style="color:var(--brand-gold); font-weight:700;">${item.city || 'BRANDON'}</td>
+                <td class="col-7">${item.package_details || ''}</td>
             `;
             
             const detailTr = document.createElement('tr');
