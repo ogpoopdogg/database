@@ -87,6 +87,19 @@
         }
         .filter-input:focus { border-color: var(--brand-gold); outline: none; }
 
+        .range-btn {
+            background: #111; border: 1px solid #333; color: var(--dim);
+            padding: 8px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            transition: 0.2s;
+        }
+        .range-btn:hover, .range-btn.active { border-color: var(--brand-gold); color: #fff; background: #222; }
+
+        .print-btn {
+            margin-left: auto; background: #222; border: 1px solid var(--brand-gold); color: var(--brand-gold);
+            padding: 8px 15px; border-radius: 4px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 0.8rem;
+        }
+        .print-btn:hover { background: var(--brand-gold); color: #000; }
+
         /* --- DATA GRID --- */
         .grid-container {
             flex: 1;
@@ -125,30 +138,29 @@
             vertical-align: middle;
         }
 
-        tr:hover { background: var(--row-hover); }
+        tbody tr.summary-row { cursor: pointer; transition: 0.2s; }
+        tbody tr.summary-row:hover { background: var(--row-hover); }
 
-        .copy-btn {
-            background: transparent; border: 1px solid #444; color: var(--brand-gold);
-            padding: 2px 6px; font-size: 10px; cursor: pointer; border-radius: 3px;
-            margin-left: 5px; opacity: 0.6; transition: 0.2s;
+        .details-row { display: none; background: #0a0a0c; }
+        .details-row.open { display: table-row; }
+        .details-content { padding: 20px; display: flex; gap: 40px; flex-wrap: wrap; border-bottom: 2px solid #222; }
+        
+        .detail-group { display: flex; flex-direction: column; gap: 5px; }
+        .detail-label { font-size: 10px; color: var(--dim); font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .detail-value { font-size: 14px; color: #fff; }
+
+        .copy-icon {
+            cursor: pointer; color: var(--brand-gold); margin-right: 8px; font-size: 12px;
         }
-        .copy-btn:hover { opacity: 1; background: var(--brand-gold); color: #000; }
+        .copy-btn-lg {
+            background: #222; border: 1px solid #444; color: var(--text); padding: 5px 10px;
+            border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 5px;
+        }
+        .copy-btn-lg:hover { border-color: var(--brand-gold); color: var(--brand-gold); }
 
         .type-tag {
             padding: 3px 8px; border-radius: 3px; font-weight: 900; font-size: 10px;
         }
-
-        .notes-cell {
-            max-width: 250px;
-            font-style: italic;
-            color: #aaa;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            cursor: pointer;
-        }
-        .notes-cell:hover { white-space: normal; overflow: visible; background: #222; position: relative; z-index: 5; }
-
         .date-cell { white-space: nowrap; font-family: monospace; color: var(--dim); }
         .driver-cell { font-weight: 800; color: var(--brand-gold); }
     </style>
@@ -169,7 +181,8 @@
         <img src="icon-512.png" class="logo" alt="Logo">
         <span class="brand-title">E&C | Executive Data Hub</span>
     </div>
-    <div id="live-stat" style="font-size: 0.8rem; font-weight: 800; color: var(--dim);">
+    <div id="live-stat" style="font-size: 0.8rem; font-weight: 800; color: var(--dim); text-align: right;">
+        <div id="backup-stat" style="color: #444; font-size: 10px; margin-bottom: 3px;">Last Backup: N/A</div>
         <span id="counter" style="color: var(--brand-gold);">0</span> ENTRIES FOUND
     </div>
 </header>
@@ -192,14 +205,23 @@
 
     <div style="display:flex; flex-direction:column; gap:4px;">
         <label style="font-size: 10px; font-weight: 800; color: var(--dim);">TYPE</label>
-        <select id="typeFilter" class="filter-input">
-            <option value="all">ALL SERVICES</option>
-            <option value="pickup">PICKUPS</option>
-            <option value="delivery">DELIVERIES</option>
-        </select>
+        <div style="display:flex; gap: 5px; align-items: center;">
+            <select id="typeFilter" class="filter-input">
+                <option value="all">ALL SERVICES</option>
+                <option value="pickup">PICKUPS</option>
+                <option value="delivery">DELIVERIES</option>
+            </select>
+            <button class="range-btn" onclick="updateRange(14)">Last 14 Days</button>
+            <button class="range-btn" onclick="updateRange(30)">Last 30 Days</button>
+            <button class="range-btn" onclick="updateRange(90)">Last 3 Months</button>
+            <button class="range-btn" onclick="updateRange(180)">Last 6 Months</button>
+            <button class="range-btn" onclick="updateRange('all')">All Time</button>
+        </div>
     </div>
 
     <button onclick="clearFilters()" style="margin-top: 18px; background: transparent; border: 1px solid #444; color: #fff; padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">RESET</button>
+    
+    <button onclick="printAndDownload()" class="print-btn">PRINT PAGE</button>
 </div>
 
 <div class="grid-container">
@@ -209,13 +231,11 @@
                 <th>Date</th>
                 <th>Type</th>
                 <th>Driver</th>
-                <th>Client / Business</th>
+                <th>Pickup Contact</th>
+                <th>Delivery Contact</th>
                 <th>Address</th>
                 <th>City</th>
-                <th>PO / Ref</th>
                 <th>Packages</th>
-                <th>Status</th>
-                <th>Admin Notes</th>
             </tr>
         </thead>
         <tbody id="gridBody">
@@ -237,6 +257,8 @@
 
     const db = firebase.database();
     let masterData = [];
+    let currentRange = 7; // Default 7 days
+    const listeners = { pickups: null, dropoffs: null };
 
     // --- ACCESS CONTROL ---
     firebase.auth().onAuthStateChanged(user => {
@@ -244,7 +266,8 @@
             const admins = ["celeste@ec.com", "desirae@ec.com"];
             if (admins.includes(user.email.toLowerCase())) {
                 document.getElementById('login-overlay').style.display = 'none';
-                initSync();
+                initSync(7); // Default 7 days
+                checkAutoBackup();
             } else {
                 alert("Restricted Access.");
                 firebase.auth().signOut();
@@ -259,23 +282,114 @@
     }
 
     // --- DATA FLOW ---
-    function initSync() {
-        db.ref('pickups').on('value', s => stream('pickup', s.val()));
-        db.ref('dropoffs').on('value', s => stream('delivery', s.val()));
+    function updateRange(days) {
+        currentRange = days;
+        initSync(days);
+    }
+
+    function initSync(days) {
+        // Detach old listeners if they exist
+        if (listeners.pickups) db.ref('pickups').off('value', listeners.pickups);
+        if (listeners.dropoffs) db.ref('dropoffs').off('value', listeners.dropoffs);
+
+        masterData = []; // Clear current data
+        document.getElementById('gridBody').innerHTML = ""; 
+
+        let queryPickups = db.ref('pickups').orderByChild('timestamp');
+        let queryDropoffs = db.ref('dropoffs').orderByChild('timestamp');
+
+        if (days !== 'all') {
+            const ms = days * 24 * 60 * 60 * 1000;
+            const startTime = Date.now() - ms;
+            queryPickups = queryPickups.startAt(startTime);
+            queryDropoffs = queryDropoffs.startAt(startTime);
+        }
+
+        listeners.pickups = queryPickups.on('value', s => stream('pickup', s.val()));
+        listeners.dropoffs = queryDropoffs.on('value', s => stream('delivery', s.val()));
     }
 
     function stream(type, data) {
+        // Filter out existing of same type to prevent dupes during re-sync
+        masterData = masterData.filter(i => i.type !== type);
+        
         const processed = Object.entries(data || {}).map(([id, val]) => ({ ...val, id, type }));
-        masterData = masterData.filter(i => i.type !== type).concat(processed);
+        masterData = masterData.concat(processed);
         masterData.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
         applyFilters();
     }
 
-    function copyVal(val, btn) {
-        navigator.clipboard.writeText(val);
-        const original = btn.innerText;
-        btn.innerText = "OK";
-        setTimeout(() => btn.innerText = original, 1000);
+    function checkAutoBackup() {
+        const lastBackup = localStorage.getItem('ec_last_backup');
+        const now = new Date();
+        const isFriday = now.getDay() === 5; // 5 is Friday
+        
+        if (lastBackup) {
+            document.getElementById('backup-stat').innerText = "Last Backup: " + new Date(lastBackup).toDateString();
+        }
+
+        // Check if it's Friday and 7 days have passed since last backup (or no backup exists)
+        const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+        const timeSince = lastBackup ? now - new Date(lastBackup) : Infinity;
+
+        if (isFriday && timeSince > (sevenDaysMs - 86400000)) { // Allow a bit of leeway within Friday
+            downloadData();
+            localStorage.setItem('ec_last_backup', now.toISOString());
+            document.getElementById('backup-stat').innerText = "Last Backup: " + now.toDateString();
+        }
+    }
+
+    function downloadData() {
+        if (masterData.length === 0) return;
+        let textContent = "E&C EXECUTIVE DATA BACKUP\nDate: " + new Date().toLocaleString() + "\nEntries: " + masterData.length + "\n----------------------------------------\n\n";
+        
+        masterData.forEach(item => {
+            textContent += `ID: ${item.id}\nDate: ${new Date(item.timestamp).toLocaleString()}\nType: ${item.type.toUpperCase()}\nDriver: ${item.assigned_to}\nPickup: ${item.name || 'N/A'}\nDelivery: ${item.delivery_name || 'N/A'}\nAddr: ${item.pickup_location || item.destination}\nCity: ${item.city}\nPO: ${item.po_number}\nStatus: ${item.status}\nDetails: ${item.package_details}\nNotes: ${item.other_info}\nUser: ${item.created_by || '?'} / ${item.last_edit_by || '?'}\n\n----------------------------------------\n\n`;
+        });
+
+        const blob = new Blob([textContent], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `EC_Backup_${new Date().toISOString().split('T')[0]}.txt`;
+        a.click();
+    }
+
+    function printAndDownload() {
+        downloadData();
+        window.print();
+    }
+
+    function copyLine(btn, dataStr) {
+        navigator.clipboard.writeText(dataStr).then(() => {
+            const span = document.createElement('span');
+            span.innerText = " Copied!";
+            span.style.color = "var(--brand-gold)";
+            span.style.fontSize = "10px";
+            span.style.fontWeight = "bold";
+            btn.parentNode.insertBefore(span, btn.nextSibling);
+            setTimeout(() => span.remove(), 1500);
+        });
+        event.stopPropagation();
+    }
+
+    function copyCardAll(btn, itemStr) {
+        const item = JSON.parse(decodeURIComponent(itemStr));
+        const text = `Date: ${new Date(item.timestamp).toLocaleString()}\nType: ${item.type}\nDriver: ${item.assigned_to}\nPickup: ${item.name}\nDelivery: ${item.delivery_name}\nAddress: ${item.pickup_location || item.destination}\nCity: ${item.city}\nPO: ${item.po_number}\nStatus: ${item.status}\nDetails: ${item.package_details}\nNotes: ${item.other_info}`;
+        
+        navigator.clipboard.writeText(text).then(() => {
+            const original = btn.innerText;
+            btn.innerText = "COPIED TO CLIPBOARD";
+            setTimeout(() => btn.innerText = original, 1500);
+        });
+    }
+
+    function toggleDetails(rowId) {
+        const detailRow = document.getElementById('detail-' + rowId);
+        if (detailRow.style.display === 'table-row') {
+            detailRow.style.display = 'none';
+        } else {
+            detailRow.style.display = 'table-row';
+        }
     }
 
     function clearFilters() {
@@ -311,23 +425,63 @@
 
         filtered.forEach(item => {
             const isP = item.type === 'pickup';
-            const client = isP ? item.name : item.delivery_name;
-            const addr = isP ? item.pickup_location : item.destination;
+            const pickupName = item.name || 'N/A';
+            const delivName = item.delivery_name || 'N/A';
+            const mainAddr = isP ? item.pickup_location : item.destination; // Display relevant address
+            
+            // Data string for line copy
+            const lineData = `${new Date(item.timestamp).toLocaleDateString()} | ${item.type} | ${item.assigned_to} | ${pickupName} | ${delivName} | ${mainAddr} | ${item.city} | ${item.package_details}`;
+
             const tr = document.createElement('tr');
+            tr.className = "summary-row";
+            tr.onclick = () => toggleDetails(item.id);
             
             tr.innerHTML = `
                 <td class="date-cell">${new Date(item.timestamp).toLocaleDateString()}</td>
                 <td><span class="type-tag" style="background:${isP ? 'var(--pickup-accent)' : 'var(--delivery-accent)'}; color:#000;">${item.type}</span></td>
                 <td class="driver-cell">${(item.assigned_to || '---').toUpperCase()}</td>
-                <td style="font-weight:700;">${client || 'N/A'}</td>
-                <td>${addr} <button class="copy-btn" onclick="copyVal('${addr}', this)">Copy</button></td>
+                <td style="font-weight:700;">${pickupName}</td>
+                <td style="font-weight:700;">${delivName}</td>
+                <td><span class="copy-icon" onclick="copyLine(this, '${lineData.replace(/'/g, "\\'")}')">📋</span> ${mainAddr}</td>
                 <td style="color:var(--brand-gold); font-weight:700;">${item.city || 'BRANDON'}</td>
-                <td><span style="color:var(--dim); font-weight:bold;">${item.po_number || ''}</span> ${item.po_number ? `<button class="copy-btn" onclick="copyVal('${item.po_number}', this)">Copy</button>` : ''}</td>
                 <td>${item.package_details || ''}</td>
-                <td style="font-weight:900; font-size:10px; color:${item.status === 'completed' ? 'var(--delivery-accent)' : 'var(--brand-gold)'}">${item.status.toUpperCase()}</td>
-                <td class="notes-cell">${item.other_info || ''}</td>
             `;
+            
+            const detailTr = document.createElement('tr');
+            detailTr.id = 'detail-' + item.id;
+            detailTr.className = 'details-row';
+            detailTr.innerHTML = `
+                <td colspan="8">
+                    <div class="details-content">
+                        <div class="detail-group">
+                            <span class="detail-label">PO / REFERENCE</span>
+                            <span class="detail-value" style="color:var(--brand-gold);">${item.po_number || 'N/A'}</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">STATUS</span>
+                            <span class="detail-value" style="font-weight:900; color:${item.status === 'completed' ? 'var(--delivery-accent)' : 'var(--pickup-accent)'}">${(item.status || 'pending').toUpperCase()}</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">DRIVER NOTES (OTHER INFO)</span>
+                            <span class="detail-value" style="font-style:italic; color:#aaa;">${item.other_info || 'None'}</span>
+                        </div>
+                         <div class="detail-group">
+                            <span class="detail-label">CREATED BY</span>
+                            <span class="detail-value">${item.created_by || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">LAST EDIT BY</span>
+                            <span class="detail-value">${item.last_edit_by || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-group" style="margin-left:auto;">
+                            <button class="copy-btn-lg" onclick="copyCardAll(this, '${encodeURIComponent(JSON.stringify(item))}')">COPY CARD INFO</button>
+                        </div>
+                    </div>
+                </td>
+            `;
+
             body.appendChild(tr);
+            body.appendChild(detailTr);
         });
     }
 
