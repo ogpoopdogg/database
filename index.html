@@ -171,6 +171,12 @@
         .col-checkbox input { accent-color: var(--brand-gold); cursor: pointer; }
         .hide-col { display: none !important; }
 
+        /* Desktop Utilities for Type Group */
+        .type-wrap { display: flex; gap: 5px; align-items: center; }
+        .range-scroll { display: contents; }
+        .mobile-hint { display: none; }
+        .mobile-copy { display: none; }
+
         /* --- PRINT STYLES --- */
         @media print {
             body { height: auto; overflow: visible; background: #fff; color: #000; }
@@ -205,20 +211,23 @@
             /* Header Adjustments */
             header { flex-direction: column; height: auto; gap: 15px; align-items: flex-start; padding: 15px; }
             .logo-group { width: 100%; justify-content: space-between; }
-            #live-stat { width: 100%; text-align: left; margin-top: 5px; font-size: 12px; }
+            #live-stat { width: 100%; text-align: center !important; margin-top: 5px; font-size: 12px; }
 
             /* Control Bar Adjustments */
             .controls { height: auto; flex-direction: column; align-items: stretch; gap: 12px; padding: 15px; }
             .controls > div { width: 100%; }
             .filter-input, select.filter-input { width: 100% !important; font-size: 16px; padding: 12px; } /* 16px prevents iOS zoom */
             
-            /* Scrollable Range Buttons */
-            .controls > div:nth-child(4) > div {
-                overflow-x: auto;
-                padding-bottom: 8px;
-                display: flex;
-                gap: 8px;
+            /* Mobile Filter Layout */
+            .type-wrap { flex-direction: column; align-items: stretch; gap: 10px; }
+            .range-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; width: 100%; }
+            .mobile-hint { 
+                display: block; position: absolute; right: 0; top: 0; 
+                color: var(--brand-gold); font-size: 14px; animation: bounce 1s infinite;
             }
+            @keyframes bounce { 0%,100%{transform:translateX(0);} 50%{transform:translateX(3px);} }
+
+            /* Scrollable Range Buttons */
             .range-btn { flex-shrink: 0; padding: 10px 16px; font-size: 14px; }
             
             /* Full Width Reset Button */
@@ -299,6 +308,10 @@
             
             .detail-value { font-size: 16px; line-height: 1.4; word-break: break-word; }
             .copy-btn-lg { padding: 12px; width: 100%; font-size: 14px; margin-top: 10px; }
+
+            /* Copy Icon */
+            .mobile-copy { display: inline-block; margin-left: 10px; cursor: pointer; color: var(--brand-gold); }
+            .col-0 { align-items: center; } 
         }
     </style>
 </head>
@@ -343,20 +356,25 @@
         <input type="date" id="dateTo" class="filter-input">
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size: 10px; font-weight: 800; color: var(--dim);">TYPE</label>
-        <div style="display:flex; gap: 5px; align-items: center;">
+    <div style="display:flex; flex-direction:column; gap:4px; position: relative;">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <label style="font-size: 10px; font-weight: 800; color: var(--dim);">TYPE</label>
+            <span class="mobile-hint">SWIPE &rarr;</span>
+        </div>
+        <div class="type-wrap">
             <select id="typeFilter" class="filter-input">
                 <option value="all">ALL SERVICES</option>
                 <option value="pickup">PICKUPS</option>
                 <option value="delivery">DELIVERIES</option>
             </select>
-            <button class="range-btn" onclick="updateRange(7)">Last 7 Days</button>
-            <button class="range-btn" onclick="updateRange(14)">Last 14 Days</button>
-            <button class="range-btn" onclick="updateRange(30)">Last 30 Days</button>
-            <button class="range-btn" onclick="updateRange(90)">Last 3 Months</button>
-            <button class="range-btn" onclick="updateRange(180)">Last 6 Months</button>
-            <button class="range-btn" onclick="updateRange('all')">All Time</button>
+            <div class="range-scroll">
+                <button class="range-btn" onclick="updateRange(7)">Last 7 Days</button>
+                <button class="range-btn" onclick="updateRange(14)">Last 14 Days</button>
+                <button class="range-btn" onclick="updateRange(30)">Last 30 Days</button>
+                <button class="range-btn" onclick="updateRange(90)">Last 3 Months</button>
+                <button class="range-btn" onclick="updateRange(180)">Last 6 Months</button>
+                <button class="range-btn" onclick="updateRange('all')">All Time</button>
+            </div>
         </div>
     </div>
 
@@ -670,7 +688,7 @@
             
             // Added classes col-0 to col-7 for column toggling
             tr.innerHTML = `
-                <td class="col-0 date-cell">${new Date(item.timestamp).toLocaleDateString()}</td>
+                <td class="col-0 date-cell"><div style="display:flex; align-items:center;">${new Date(item.timestamp).toLocaleDateString()}<span class="mobile-copy" onclick="copyLine(this, '${new Date(item.timestamp).toLocaleDateString()}')">❐</span></div></td>
                 <td class="col-1"><span class="type-tag" style="background:${isP ? 'var(--pickup-accent)' : 'var(--delivery-accent)'}; color:#000;">${item.type}</span></td>
                 <td class="col-2 driver-cell">${(item.assigned_to || '---').toUpperCase()}</td>
                 <td class="col-3" style="font-weight:700;">${pickupName}</td>
