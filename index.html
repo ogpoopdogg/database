@@ -307,6 +307,16 @@
                 letter-spacing: 1px;
             }
 
+            .card-time {
+                position: absolute;
+                top: 8px;
+                right: 12px;
+                font-size: 12px;
+                font-weight: 800;
+                color: var(--brand-gold);
+                letter-spacing: 1px;
+            }
+
             td {
                 display: flex;
                 justify-content: space-between;
@@ -403,7 +413,9 @@
 <div class="controls">
     <div style="display:flex; flex-direction:column; gap:4px;">
         <label style="font-size: 10px; font-weight: 800; color: var(--dim);">GLOBAL SEARCH</label>
-        <input type="text" id="globalSearch" class="filter-input" style="width: 250px;" placeholder="Filter everything...">
+        <form action="javascript:void(0);" style="margin: 0;">
+            <input type="text" id="globalSearch" class="filter-input" style="width: 250px;" placeholder="Filter everything...">
+        </form>
     </div>
     
     <div style="display:flex; flex-direction:column; gap:4px;">
@@ -490,6 +502,14 @@
         if (localStorage.getItem('ec_grid_theme') === 'light') {
             document.body.classList.add('light-mode');
         }
+        
+        // Hide keyboard on enter for search
+        document.getElementById('globalSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.blur();
+                applyFilters();
+            }
+        });
     });
 
     function toggleTheme() {
@@ -723,6 +743,12 @@
         applyFilters();
     }
 
+    function formatTime12(ts) { 
+        if (!ts) return ''; 
+        const d = new Date(ts); 
+        return isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }); 
+    }
+
     function applyFilters() {
         const search = document.getElementById('globalSearch').value.toLowerCase();
         const fromDateStr = document.getElementById('dateFrom').value;
@@ -765,14 +791,16 @@
             
             const itemDateObj = new Date(item.timestamp);
             const formattedDateStr = itemDateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            const completedTimeStr = formatTime12(item.completed_at);
 
             const tr = document.createElement('tr');
             tr.className = "summary-row";
             tr.onclick = () => toggleDetails(item.id);
             
-            // Added card-date for mobile view
+            // Added card-date and card-time for mobile view
             tr.innerHTML = `
                 <div class="card-date">${formattedDateStr}</div>
+                ${completedTimeStr ? `<div class="card-time">${completedTimeStr}</div>` : ''}
                 <td class="col-0" style="font-weight:700; color:var(--pickup-accent);">${pickupName}</td>
                 <td class="col-1">${item.pickup_location || ''}</td>
                 <td class="col-2">${item.pickup_city || item.city || ''}</td>
