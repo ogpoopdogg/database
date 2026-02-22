@@ -121,10 +121,9 @@
             padding: 15px 20px;
             background: var(--control-bg);
             display: flex;
+            flex-direction: column;
             gap: 15px;
-            align-items: center;
             border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
         }
 
         .filter-input {
@@ -220,9 +219,10 @@
 
         /* Desktop Utilities for Type Group */
         .type-wrap { display: flex; gap: 5px; align-items: center; }
-        .range-scroll { display: contents; }
+        .range-scroll { display: flex; gap: 8px; flex-wrap: wrap; }
         .mobile-hint { display: none; }
         .mobile-copy { display: none; }
+        .card-date, .card-time { display: none; }
 
         /* --- PRINT STYLES --- */
         @media print {
@@ -263,12 +263,14 @@
 
             /* Control Bar Adjustments */
             .controls { height: auto; flex-direction: column; align-items: stretch; gap: 12px; padding: 15px; }
-            .controls > div { width: 100%; }
+            .controls-top { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
+            .controls-bottom { display: flex; flex-direction: column; align-items: stretch; gap: 12px; margin-top: 0; }
+            .controls-top > div, .controls-bottom > div { width: 100%; }
             .filter-input, select.filter-input { width: 100% !important; font-size: 16px; padding: 12px; } /* 16px prevents iOS zoom */
             
             /* Mobile Filter Layout */
             .type-wrap { flex-direction: row; align-items: center; gap: 10px; }
-            .range-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; width: 100%; }
+            .range-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; width: 100%; flex-wrap: nowrap; }
             .mobile-hint { 
                 display: block; position: absolute; right: 0; top: auto; bottom: -8px; 
                 color: var(--brand-gold); font-size: 22px; animation: bounce 1s infinite;
@@ -298,6 +300,7 @@
             }
 
             .card-date {
+                display: block;
                 position: absolute;
                 top: 8px;
                 left: 12px;
@@ -308,6 +311,7 @@
             }
 
             .card-time {
+                display: block;
                 position: absolute;
                 top: 8px;
                 right: 12px;
@@ -411,25 +415,34 @@
 </header>
 
 <div class="controls">
-    <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size: 10px; font-weight: 800; color: var(--dim);">GLOBAL SEARCH</label>
-        <form action="javascript:void(0);" style="margin: 0;">
-            <input type="text" id="globalSearch" class="filter-input" style="width: 250px;" placeholder="Filter everything...">
-        </form>
-    </div>
-    
-    <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size: 10px; font-weight: 800; color: var(--dim);">DATE FROM</label>
-        <input type="date" id="dateFrom" class="filter-input">
+    <div class="controls-top" style="display: flex; gap: 15px; align-items: flex-end; width: 100%; flex-wrap: wrap;">
+        <div style="display:flex; flex-direction:column; gap:4px;">
+            <label style="font-size: 10px; font-weight: 800; color: var(--dim);">GLOBAL SEARCH</label>
+            <form action="javascript:void(0);" style="margin: 0;">
+                <input type="text" id="globalSearch" class="filter-input" style="width: 250px;" placeholder="Filter everything...">
+            </form>
+        </div>
+        
+        <div style="display:flex; flex-direction:column; gap:4px;">
+            <label style="font-size: 10px; font-weight: 800; color: var(--dim);">DATE FROM</label>
+            <input type="date" id="dateFrom" class="filter-input">
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:4px;">
+            <label style="font-size: 10px; font-weight: 800; color: var(--dim);">DATE TO</label>
+            <input type="date" id="dateTo" class="filter-input">
+        </div>
+
+        <button onclick="clearFilters()" style="margin-bottom: 2px; background: transparent; border: 1px solid #444; color: var(--text); padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">RESET</button>
+        
+        <div style="margin-left: auto; display: flex; gap: 10px; margin-bottom: 2px;">
+            <button onclick="exportCurrentView()" class="print-btn" style="border-color: #555; color: var(--text);">EXPORT TXT</button>
+            <button onclick="printAndDownload()" class="print-btn">PRINT PAGE</button>
+        </div>
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size: 10px; font-weight: 800; color: var(--dim);">DATE TO</label>
-        <input type="date" id="dateTo" class="filter-input">
-    </div>
-
-    <div style="display:flex; flex-direction:column; gap:4px; position: relative;">
-        <div style="display:flex; justify-content: space-between; align-items: center;">
+    <div class="controls-bottom" style="display: flex; gap: 15px; align-items: center; width: 100%; flex-wrap: wrap; margin-top: 5px;">
+        <div style="display:flex; align-items: center; gap: 10px; position: relative;">
             <label style="font-size: 10px; font-weight: 800; color: var(--dim);">DATE RANGE</label>
             <span class="mobile-hint">&rarr;</span>
         </div>
@@ -443,15 +456,8 @@
             <button class="range-btn" onclick="updateRange(180)">Last 6 Months</button>
             <button class="range-btn" onclick="updateRange('all')">All Time</button>
         </div>
+        <div id="columnToggles" class="col-toggle-group" style="margin-top: 0; margin-left: auto; width: auto; align-items: center;"></div>
     </div>
-
-    <button onclick="clearFilters()" style="margin-top: 18px; background: transparent; border: 1px solid #444; color: var(--text); padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">RESET</button>
-    
-    <div style="margin-left: auto; display: flex; gap: 10px;">
-        <button onclick="exportCurrentView()" class="print-btn" style="border-color: #555; color: var(--text);">EXPORT TXT</button>
-        <button onclick="printAndDownload()" class="print-btn">PRINT PAGE</button>
-    </div>
-    <div id="columnToggles" class="col-toggle-group"></div>
 </div>
 
 <div class="grid-container">
@@ -797,11 +803,13 @@
             tr.className = "summary-row";
             tr.onclick = () => toggleDetails(item.id);
             
-            // Added card-date and card-time for mobile view
+            // Added card-date and card-time inside the first td to fix desktop table layout while preserving mobile
             tr.innerHTML = `
-                <div class="card-date">${formattedDateStr}</div>
-                ${completedTimeStr ? `<div class="card-time">${completedTimeStr}</div>` : ''}
-                <td class="col-0" style="font-weight:700; color:var(--pickup-accent);">${pickupName}</td>
+                <td class="col-0" style="font-weight:700; color:var(--pickup-accent);">
+                    <div class="card-date">${formattedDateStr}</div>
+                    ${completedTimeStr ? `<div class="card-time">${completedTimeStr}</div>` : ''}
+                    ${pickupName}
+                </td>
                 <td class="col-1">${item.pickup_location || ''}</td>
                 <td class="col-2">${item.pickup_city || item.city || ''}</td>
                 <td class="col-3" style="font-weight:700; color:var(--delivery-accent);">${delivName}</td>
