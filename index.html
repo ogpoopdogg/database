@@ -226,11 +226,12 @@
 
         /* --- PRINT STYLES --- */
         @media print {
+            @page { size: landscape; margin: 0.5cm; }
             body { height: auto; overflow: visible; background: #fff; color: #000; }
             .grid-container { overflow: visible; height: auto; }
             .controls, header, #login-overlay, .copy-icon, .copy-btn-lg, #mobile-blocker { display: none !important; }
             
-            table { width: 100%; border-collapse: collapse; min-width: 0; font-size: 10px; }
+            table { width: 100%; border-collapse: collapse; min-width: 0; font-size: 8px; }
             th { background: #fff; color: #000; border-bottom: 2px solid #000; position: static; }
             td { color: #000; border-bottom: 1px solid #ccc; }
             
@@ -437,7 +438,7 @@
         <button onclick="clearFilters()" style="margin-bottom: 2px; background: transparent; border: 1px solid #444; color: var(--text); padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">RESET</button>
         
         <div style="margin-left: auto; display: flex; gap: 10px; margin-bottom: 2px;">
-            <button onclick="exportCurrentView()" class="print-btn" style="border-color: #555; color: var(--text);">EXPORT EXCEL</button>
+            <button onclick="exportCurrentView()" class="print-btn" style="border-color: #555; color: var(--text);">EXPORT CSV</button>
             <button onclick="printAndDownload()" class="print-btn">PRINT PAGE</button>
         </div>
     </div>
@@ -635,35 +636,34 @@
     // --- BACKUP & EXPORT SYSTEM ---
     
     function generateFileContent(dataArray, title) {
-        if (dataArray.length === 0) return "<table border='1'><tr><td>No Data Found.</td></tr></table>";
+        if (dataArray.length === 0) return "No Data Found.";
         
-        let html = `<table border="1" style="border-collapse: collapse;">\n`;
-        html += `<tr><th>ID</th><th>Date</th><th>Status</th><th>Driver</th><th>Pickup</th><th>Delivery</th><th>Pickup Addr</th><th>Deliv Addr</th><th>City</th><th>PO</th><th>Details</th><th>Notes</th><th>Created By</th><th>Last Edit By</th></tr>\n`;
+        let csv = `ID,Date,Status,Driver,Pickup,Delivery,Pickup Addr,Deliv Addr,City,PO,Details,Notes,Created By,Last Edit By\n`;
         
         dataArray.forEach(item => {
-            html += `<tr>`;
-            html += `<td>${item.id || ''}</td>`;
-            html += `<td>${new Date(item.timestamp).toLocaleString()}</td>`;
-            html += `<td>${(item.status || 'unknown').toUpperCase()}</td>`;
-            html += `<td>${item.assigned_to || ''}</td>`;
-            html += `<td>${item.name || 'N/A'}</td>`;
-            html += `<td>${item.delivery_name || 'N/A'}</td>`;
-            html += `<td>${item.pickup_location || 'N/A'}</td>`;
-            html += `<td>${item.destination || 'N/A'}</td>`;
-            html += `<td>${item.city || ''}</td>`;
-            html += `<td>${item.po_number || ''}</td>`;
-            html += `<td>${item.package_details || ''}</td>`;
-            html += `<td>${item.other_info || ''}</td>`;
-            html += `<td>${item.created_by || '?'}</td>`;
-            html += `<td>${item.last_edit_by || '?'}</td>`;
-            html += `</tr>\n`;
+            let row = [
+                item.id || '',
+                new Date(item.timestamp).toLocaleString(),
+                (item.status || 'unknown').toUpperCase(),
+                item.assigned_to || '',
+                item.name || 'N/A',
+                item.delivery_name || 'N/A',
+                item.pickup_location || 'N/A',
+                item.destination || 'N/A',
+                item.city || '',
+                item.po_number || '',
+                item.package_details || '',
+                item.other_info || '',
+                item.created_by || '?',
+                item.last_edit_by || '?'
+            ];
+            csv += row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',') + "\n";
         });
-        html += `</table>`;
-        return html;
+        return csv;
     }
 
     function downloadTextFile(filename, content) {
-        const blob = new Blob([content], { type: 'application/vnd.ms-excel' });
+        const blob = new Blob(["\uFEFF" + content], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = filename;
@@ -674,7 +674,7 @@
         const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
         const s = new Date(startMs);
         const e = new Date(endMs);
-        return `backup_${months[s.getMonth()]}${s.getDate()}_${months[e.getMonth()]}${e.getDate()}.xls`;
+        return `backup_${months[s.getMonth()]}${s.getDate()}_${months[e.getMonth()]}${e.getDate()}.csv`;
     }
 
     function checkAutoBackup() {
@@ -715,12 +715,11 @@
 
     function exportCurrentView() {
         const content = generateFileContent(filteredData, "E&C EXPORT - CURRENT VIEW");
-        downloadTextFile(`EC_Export_${new Date().toISOString().split('T')[0]}.xls`, content);
+        downloadTextFile(`EC_Export_${new Date().toISOString().split('T')[0]}.csv`, content);
     }
 
     function printAndDownload() {
-        const content = generateFileContent(filteredData, "E&C PRINT VIEW");
-        downloadTextFile(`EC_Print_${new Date().toISOString().split('T')[0]}.xls`, content);
+        window.print();
     }
 
     // --- UI HELPERS ---
