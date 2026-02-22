@@ -124,7 +124,7 @@
 
         th {
             text-align: left;
-            padding: 12px 15px;
+            padding: 8px 10px;
             color: var(--dim);
             text-transform: uppercase;
             font-weight: 800;
@@ -134,7 +134,7 @@
         }
 
         td {
-            padding: 12px 15px;
+            padding: 8px 10px;
             border-bottom: 1px solid var(--border);
             vertical-align: middle;
         }
@@ -242,8 +242,8 @@
                 flex-direction: column;
                 background: #111;
                 border: 1px solid var(--border);
-                margin: 0 15px 15px 15px; /* Spacing between cards */
-                border-radius: 8px;
+                margin: 0 10px 10px 10px; /* Spacing between cards */
+                border-radius: 6px;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             }
 
@@ -253,8 +253,8 @@
                 align-items: flex-start;
                 text-align: right;
                 border-bottom: 1px solid #222;
-                padding: 12px 15px;
-                font-size: 16px; /* Min 16px legibility */
+                padding: 8px 12px;
+                font-size: 14px; /* Optimized legibility */
                 height: auto;
             }
             td:last-child { border-bottom: none; }
@@ -263,14 +263,13 @@
             .hide-col { display: flex !important; }
 
             /* Labels via CSS generated content */
-            .col-0::before { content: "Date"; }
-            .col-1::before { content: "Driver"; }
-            .col-2::before { content: "Pickup Contact"; }
-            .col-3::before { content: "Pickup Address"; }
-            .col-4::before { content: "Delivery Contact"; }
-            .col-5::before { content: "Delivery Address"; }
-            .col-6::before { content: "City"; }
-            .col-7::before { content: "Packages"; }
+            .col-0::before { content: "Pickup Contact"; }
+            .col-1::before { content: "Pickup Address"; }
+            .col-2::before { content: "Pickup City"; }
+            .col-3::before { content: "Delivery Contact"; }
+            .col-4::before { content: "Delivery Address"; }
+            .col-5::before { content: "Delivery City"; }
+            .col-6::before { content: "Packages"; }
 
             td::before {
                 color: var(--dim);
@@ -280,7 +279,7 @@
                 margin-right: 15px;
                 min-width: 80px;
                 text-align: left;
-                padding-top: 4px;
+                padding-top: 2px;
             }
 
             /* Details Panel Expansion */
@@ -383,14 +382,13 @@
     <table id="dataTable">
         <thead>
             <tr>
-                <th class="col-0">Date</th>
-                <th class="col-1">Driver</th>
-                <th class="col-2">Pickup Contact</th>
-                <th class="col-3">Pickup Address</th>
-                <th class="col-4">Delivery Contact</th>
-                <th class="col-5">Delivery Address</th>
-                <th class="col-6">City</th>
-                <th class="col-7">Packages</th>
+                <th class="col-0">Pickup Contact</th>
+                <th class="col-1">Pickup Address</th>
+                <th class="col-2">Pickup City</th>
+                <th class="col-3">Delivery Contact</th>
+                <th class="col-4">Delivery Address</th>
+                <th class="col-5">Delivery City</th>
+                <th class="col-6">Packages</th>
             </tr>
         </thead>
         <tbody id="gridBody">
@@ -418,9 +416,9 @@
 
     // Column Config
     const columnConfig = [
-        "Date", "Driver", "Pickup Contact", "Pickup Address", "Delivery Contact", "Delivery Address", "City", "Packages"
+        "Pickup Contact", "Pickup Address", "Pickup City", "Delivery Contact", "Delivery Address", "Delivery City", "Packages"
     ];
-    let visibleCols = new Array(8).fill(true);
+    let visibleCols = new Array(7).fill(true);
 
     // --- INIT ---
     document.addEventListener("DOMContentLoaded", () => {
@@ -657,31 +655,35 @@
             const pickupName = item.name || 'N/A';
             const delivName = item.delivery_name || 'N/A';
             
-            // Data string for line copy
-            const lineData = `${new Date(item.timestamp).toLocaleDateString()} | ${item.status || 'pending'} | ${item.assigned_to} | ${pickupName} | ${delivName} | ${item.pickup_location || 'N/A'} | ${item.destination || 'N/A'} | ${item.city} | ${item.package_details}`;
-
             const tr = document.createElement('tr');
             tr.className = "summary-row";
             tr.onclick = () => toggleDetails(item.id);
             
-            // Added classes col-0 to col-7 for column toggling
+            // Added classes col-0 to col-6 for column toggling
             tr.innerHTML = `
-                <td class="col-0 date-cell"><div style="display:flex; align-items:center;">${new Date(item.timestamp).toLocaleDateString()}<span class="mobile-copy" onclick="copyLine(this, '${new Date(item.timestamp).toLocaleDateString()}')">❐</span></div></td>
-                <td class="col-1 driver-cell">${(item.assigned_to || '---').toUpperCase()}</td>
-                <td class="col-2" style="font-weight:700;">${pickupName}</td>
-                <td class="col-3">${item.pickup_location || ''}</td>
-                <td class="col-4" style="font-weight:700;">${delivName}</td>
-                <td class="col-5">${item.destination || ''}</td>
-                <td class="col-6" style="color:var(--brand-gold); font-weight:700;">${item.city || 'BRANDON'}</td>
-                <td class="col-7">${item.package_details || ''}</td>
+                <td class="col-0" style="font-weight:700; color:var(--pickup-accent);">${pickupName}</td>
+                <td class="col-1">${item.pickup_location || ''}</td>
+                <td class="col-2">${item.pickup_city || item.city || ''}</td>
+                <td class="col-3" style="font-weight:700; color:var(--delivery-accent);">${delivName}</td>
+                <td class="col-4">${item.destination || ''}</td>
+                <td class="col-5">${item.delivery_city || item.city || ''}</td>
+                <td class="col-6" style="font-weight:700; color:var(--brand-gold);">${item.package_details || ''}</td>
             `;
             
             const detailTr = document.createElement('tr');
             detailTr.id = 'detail-' + item.id;
             detailTr.className = 'details-row';
             detailTr.innerHTML = `
-                <td colspan="8">
+                <td colspan="7">
                     <div class="details-content">
+                        <div class="detail-group">
+                            <span class="detail-label">DATE</span>
+                            <span class="detail-value"><div style="display:flex; align-items:center;">${new Date(item.timestamp).toLocaleDateString()}<span class="mobile-copy" onclick="copyLine(this, '${new Date(item.timestamp).toLocaleDateString()}')">❐</span></div></span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">DRIVER</span>
+                            <span class="detail-value" style="font-weight:800; color:var(--brand-gold);">${(item.assigned_to || '---').toUpperCase()}</span>
+                        </div>
                         <div class="detail-group">
                             <span class="detail-label">PO / REFERENCE</span>
                             <span class="detail-value" style="color:var(--brand-gold);">${item.po_number || 'N/A'}</span>
