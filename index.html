@@ -220,7 +220,6 @@
             
             /* Mobile Filter Layout */
             .type-wrap { flex-direction: row; align-items: center; gap: 10px; }
-            #typeFilter { width: auto !important; text-align: center; text-align-last: center; flex-shrink: 0; }
             .range-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; width: 100%; }
             .mobile-hint { 
                 display: block; position: absolute; right: 0; top: auto; bottom: -8px; 
@@ -265,14 +264,13 @@
 
             /* Labels via CSS generated content */
             .col-0::before { content: "Date"; }
-            .col-1::before { content: "Type"; }
-            .col-2::before { content: "Driver"; }
-            .col-3::before { content: "Pickup Contact"; }
-            .col-4::before { content: "Pickup Address"; }
-            .col-5::before { content: "Delivery Contact"; }
-            .col-6::before { content: "Delivery Address"; }
-            .col-7::before { content: "City"; }
-            .col-8::before { content: "Packages"; }
+            .col-1::before { content: "Driver"; }
+            .col-2::before { content: "Pickup Contact"; }
+            .col-3::before { content: "Pickup Address"; }
+            .col-4::before { content: "Delivery Contact"; }
+            .col-5::before { content: "Delivery Address"; }
+            .col-6::before { content: "City"; }
+            .col-7::before { content: "Packages"; }
 
             td::before {
                 color: var(--dim);
@@ -359,23 +357,16 @@
 
     <div style="display:flex; flex-direction:column; gap:4px; position: relative;">
         <div style="display:flex; justify-content: space-between; align-items: center;">
-            <label style="font-size: 10px; font-weight: 800; color: var(--dim);">TYPE</label>
+            <label style="font-size: 10px; font-weight: 800; color: var(--dim);">DATE RANGE</label>
             <span class="mobile-hint">&rarr;</span>
         </div>
-        <div class="type-wrap">
-            <select id="typeFilter" class="filter-input">
-                <option value="all">ALL SERVICES</option>
-                <option value="pickup">PICKUPS</option>
-                <option value="delivery">DELIVERIES</option>
-            </select>
-            <div class="range-scroll">
-                <button class="range-btn" onclick="updateRange(7)">Last 7 Days</button>
-                <button class="range-btn" onclick="updateRange(14)">Last 14 Days</button>
-                <button class="range-btn" onclick="updateRange(30)">Last 30 Days</button>
-                <button class="range-btn" onclick="updateRange(90)">Last 3 Months</button>
-                <button class="range-btn" onclick="updateRange(180)">Last 6 Months</button>
-                <button class="range-btn" onclick="updateRange('all')">All Time</button>
-            </div>
+        <div class="range-scroll">
+            <button class="range-btn" onclick="updateRange(7)">Last 7 Days</button>
+            <button class="range-btn" onclick="updateRange(14)">Last 14 Days</button>
+            <button class="range-btn" onclick="updateRange(30)">Last 30 Days</button>
+            <button class="range-btn" onclick="updateRange(90)">Last 3 Months</button>
+            <button class="range-btn" onclick="updateRange(180)">Last 6 Months</button>
+            <button class="range-btn" onclick="updateRange('all')">All Time</button>
         </div>
     </div>
 
@@ -393,14 +384,13 @@
         <thead>
             <tr>
                 <th class="col-0">Date</th>
-                <th class="col-1">Type</th>
-                <th class="col-2">Driver</th>
-                <th class="col-3">Pickup Contact</th>
-                <th class="col-4">Pickup Address</th>
-                <th class="col-5">Delivery Contact</th>
-                <th class="col-6">Delivery Address</th>
-                <th class="col-7">City</th>
-                <th class="col-8">Packages</th>
+                <th class="col-1">Driver</th>
+                <th class="col-2">Pickup Contact</th>
+                <th class="col-3">Pickup Address</th>
+                <th class="col-4">Delivery Contact</th>
+                <th class="col-5">Delivery Address</th>
+                <th class="col-6">City</th>
+                <th class="col-7">Packages</th>
             </tr>
         </thead>
         <tbody id="gridBody">
@@ -424,13 +414,13 @@
     let masterData = [];
     let filteredData = []; // Store currently visible data
     let currentRange = 7; // Default 7 days
-    const listeners = { pickups: null, dropoffs: null };
+    const listeners = { jobs: null };
 
     // Column Config
     const columnConfig = [
-        "Date", "Type", "Driver", "Pickup Contact", "Pickup Address", "Delivery Contact", "Delivery Address", "City", "Packages"
+        "Date", "Driver", "Pickup Contact", "Pickup Address", "Delivery Contact", "Delivery Address", "City", "Packages"
     ];
-    let visibleCols = new Array(9).fill(true);
+    let visibleCols = new Array(8).fill(true);
 
     // --- INIT ---
     document.addEventListener("DOMContentLoaded", () => {
@@ -496,32 +486,24 @@
 
     function initSync(days) {
         // Detach old listeners if they exist
-        if (listeners.pickups) db.ref('pickups').off('value', listeners.pickups);
-        if (listeners.dropoffs) db.ref('dropoffs').off('value', listeners.dropoffs);
+        if (listeners.jobs) db.ref('jobs').off('value', listeners.jobs);
 
         masterData = []; // Clear current data
         document.getElementById('gridBody').innerHTML = ""; 
 
-        let queryPickups = db.ref('pickups').orderByChild('timestamp');
-        let queryDropoffs = db.ref('dropoffs').orderByChild('timestamp');
+        let queryJobs = db.ref('jobs').orderByChild('timestamp');
 
         if (days !== 'all') {
             const ms = days * 24 * 60 * 60 * 1000;
             const startTime = Date.now() - ms;
-            queryPickups = queryPickups.startAt(startTime);
-            queryDropoffs = queryDropoffs.startAt(startTime);
+            queryJobs = queryJobs.startAt(startTime);
         }
 
-        listeners.pickups = queryPickups.on('value', s => stream('pickup', s.val()));
-        listeners.dropoffs = queryDropoffs.on('value', s => stream('delivery', s.val()));
+        listeners.jobs = queryJobs.on('value', s => stream(s.val()));
     }
 
-    function stream(type, data) {
-        // Filter out existing of same type to prevent dupes during re-sync
-        masterData = masterData.filter(i => i.type !== type);
-        
-        const processed = Object.entries(data || {}).map(([id, val]) => ({ ...val, id, type }));
-        masterData = masterData.concat(processed);
+    function stream(data) {
+        masterData = Object.entries(data || {}).map(([id, val]) => ({ ...val, id }));
         masterData.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
         applyFilters();
     }
@@ -533,7 +515,7 @@
         let textContent = `${title}\nDate Generated: ${new Date().toLocaleString()}\nEntries: ${dataArray.length}\n----------------------------------------\n\n`;
         
         dataArray.forEach(item => {
-            textContent += `ID: ${item.id}\nDate: ${new Date(item.timestamp).toLocaleString()}\nType: ${item.type.toUpperCase()}\nDriver: ${item.assigned_to}\nPickup: ${item.name || 'N/A'}\nDelivery: ${item.delivery_name || 'N/A'}\nAddr: ${item.pickup_location || item.destination}\nCity: ${item.city}\nPO: ${item.po_number}\nStatus: ${item.status}\nDetails: ${item.package_details}\nNotes: ${item.other_info}\nUser: ${item.created_by || '?'} / ${item.last_edit_by || '?'}\n\n----------------------------------------\n\n`;
+            textContent += `ID: ${item.id}\nDate: ${new Date(item.timestamp).toLocaleString()}\nStatus: ${(item.status || 'unknown').toUpperCase()}\nDriver: ${item.assigned_to}\nPickup: ${item.name || 'N/A'}\nDelivery: ${item.delivery_name || 'N/A'}\nPickup Addr: ${item.pickup_location || 'N/A'}\nDeliv Addr: ${item.destination || 'N/A'}\nCity: ${item.city}\nPO: ${item.po_number}\nDetails: ${item.package_details}\nNotes: ${item.other_info}\nUser: ${item.created_by || '?'} / ${item.last_edit_by || '?'}\n\n----------------------------------------\n\n`;
         });
         return textContent;
     }
@@ -620,7 +602,7 @@
 
     function copyCardAll(btn, itemStr) {
         const item = JSON.parse(decodeURIComponent(itemStr));
-        const text = `Date: ${new Date(item.timestamp).toLocaleString()}\nType: ${item.type}\nDriver: ${item.assigned_to}\nPickup: ${item.name}\nDelivery: ${item.delivery_name}\nAddress: ${item.pickup_location || item.destination}\nCity: ${item.city}\nPO: ${item.po_number}\nStatus: ${item.status}\nDetails: ${item.package_details}\nNotes: ${item.other_info}`;
+        const text = `Date: ${new Date(item.timestamp).toLocaleString()}\nStatus: ${item.status || 'N/A'}\nDriver: ${item.assigned_to}\nPickup: ${item.name}\nDelivery: ${item.delivery_name}\nPickup Addr: ${item.pickup_location || 'N/A'}\nDeliv Addr: ${item.destination || 'N/A'}\nCity: ${item.city}\nPO: ${item.po_number}\nDetails: ${item.package_details}\nNotes: ${item.other_info}`;
         
         navigator.clipboard.writeText(text).then(() => {
             const original = btn.innerText;
@@ -647,7 +629,6 @@
         document.getElementById('globalSearch').value = "";
         document.getElementById('dateFrom').value = "";
         document.getElementById('dateTo').value = "";
-        document.getElementById('typeFilter').value = "all";
         applyFilters();
     }
 
@@ -655,7 +636,6 @@
         const search = document.getElementById('globalSearch').value.toLowerCase();
         const from = document.getElementById('dateFrom').value;
         const to = document.getElementById('dateTo').value;
-        const type = document.getElementById('typeFilter').value;
         const body = document.getElementById('gridBody');
         
         body.innerHTML = "";
@@ -665,23 +645,20 @@
             const itemDate = new Date(ts).toISOString().split('T')[0];
             
             const matchSearch = JSON.stringify(item).toLowerCase().includes(search);
-            const matchType = type === 'all' || item.type === type;
             const matchFrom = !from || itemDate >= from;
             const matchTo = !to || itemDate <= to;
             
-            return matchSearch && matchType && matchFrom && matchTo;
+            return matchSearch && matchFrom && matchTo;
         });
 
         document.getElementById('counter').innerText = filteredData.length;
 
         filteredData.forEach(item => {
-            const isP = item.type === 'pickup';
             const pickupName = item.name || 'N/A';
             const delivName = item.delivery_name || 'N/A';
-            const mainAddr = isP ? item.pickup_location : item.destination; // Display relevant address
             
             // Data string for line copy
-            const lineData = `${new Date(item.timestamp).toLocaleDateString()} | ${item.type} | ${item.assigned_to} | ${pickupName} | ${delivName} | ${mainAddr} | ${item.city} | ${item.package_details}`;
+            const lineData = `${new Date(item.timestamp).toLocaleDateString()} | ${item.status || 'pending'} | ${item.assigned_to} | ${pickupName} | ${delivName} | ${item.pickup_location || 'N/A'} | ${item.destination || 'N/A'} | ${item.city} | ${item.package_details}`;
 
             const tr = document.createElement('tr');
             tr.className = "summary-row";
@@ -690,21 +667,20 @@
             // Added classes col-0 to col-7 for column toggling
             tr.innerHTML = `
                 <td class="col-0 date-cell"><div style="display:flex; align-items:center;">${new Date(item.timestamp).toLocaleDateString()}<span class="mobile-copy" onclick="copyLine(this, '${new Date(item.timestamp).toLocaleDateString()}')">❐</span></div></td>
-                <td class="col-1"><span class="type-tag" style="background:${isP ? 'var(--pickup-accent)' : 'var(--delivery-accent)'}; color:#000;">${item.type}</span></td>
-                <td class="col-2 driver-cell">${(item.assigned_to || '---').toUpperCase()}</td>
-                <td class="col-3" style="font-weight:700;">${pickupName}</td>
-                <td class="col-4">${item.pickup_location || ''}</td>
-                <td class="col-5" style="font-weight:700;">${delivName}</td>
-                <td class="col-6">${item.destination || ''}</td>
-                <td class="col-7" style="color:var(--brand-gold); font-weight:700;">${item.city || 'BRANDON'}</td>
-                <td class="col-8">${item.package_details || ''}</td>
+                <td class="col-1 driver-cell">${(item.assigned_to || '---').toUpperCase()}</td>
+                <td class="col-2" style="font-weight:700;">${pickupName}</td>
+                <td class="col-3">${item.pickup_location || ''}</td>
+                <td class="col-4" style="font-weight:700;">${delivName}</td>
+                <td class="col-5">${item.destination || ''}</td>
+                <td class="col-6" style="color:var(--brand-gold); font-weight:700;">${item.city || 'BRANDON'}</td>
+                <td class="col-7">${item.package_details || ''}</td>
             `;
             
             const detailTr = document.createElement('tr');
             detailTr.id = 'detail-' + item.id;
             detailTr.className = 'details-row';
             detailTr.innerHTML = `
-                <td colspan="9">
+                <td colspan="8">
                     <div class="details-content">
                         <div class="detail-group">
                             <span class="detail-label">PO / REFERENCE</span>
