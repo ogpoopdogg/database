@@ -15,7 +15,36 @@
             --row-hover: #16161a;
             --pickup-accent: #cc5200;
             --delivery-accent: #00b32d;
+            --header-bg: #000;
+            --control-bg: #0a0a0c;
+            --input-bg: #111;
+            --card-bg: #111;
+            --details-bg: #0e0e10;
         }
+
+        /* Light Mode Overrides */
+        body.light-mode {
+            --bg-deep: #f0f2f5;
+            --table-bg: #fff;
+            --border: #ccc;
+            --text: #000;
+            --dim: #555;
+            --row-hover: #e4e6eb;
+            --pickup-accent: #000;
+            --delivery-accent: #000;
+            --header-bg: #e0e0e0;
+            --control-bg: #fff;
+            --input-bg: #fff;
+            --card-bg: #fff;
+            --details-bg: #f9f9f9;
+        }
+
+        body.light-mode * { color: #000 !important; border-color: #ccc !important; }
+        body.light-mode .type-tag { border: 1px solid #000 !important; }
+        body.light-mode th { background: #e0e0e0 !important; }
+        body.light-mode .print-btn { background: #e0e0e0 !important; }
+        body.light-mode .login-box { background: #fff !important; }
+        body.light-mode .login-input { background: #fff !important; }
 
         * { box-sizing: border-box; }
         body {
@@ -50,16 +79,32 @@
         /* --- HEADER --- */
         header {
             padding: 10px 20px;
-            background: #000;
+            background: var(--header-bg);
             border-bottom: 2px solid var(--brand-gold);
             display: flex;
+            flex-direction: column;
             justify-content: space-between;
-            align-items: center;
+            align-items: stretch;
             flex-shrink: 0;
             position: relative;
         }
 
-        .logo-group { display: flex; align-items: center; gap: 15px; }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .header-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .logo-group { display: flex; align-items: center; gap: 15px; cursor: pointer; }
         .logo {
             height: 40px;
             filter: drop-shadow(0 0 5px rgba(204, 163, 0, 0.3));
@@ -74,7 +119,7 @@
         /* --- CONTROL BAR --- */
         .controls {
             padding: 15px 20px;
-            background: #0a0a0c;
+            background: var(--control-bg);
             display: flex;
             gap: 15px;
             align-items: center;
@@ -83,17 +128,18 @@
         }
 
         .filter-input {
-            background: #111; border: 1px solid #333; color: #fff;
+            background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
             padding: 8px 12px; border-radius: 4px; font-size: 0.9rem;
         }
         .filter-input:focus { border-color: var(--brand-gold); outline: none; }
 
         .range-btn {
-            background: #111; border: 1px solid #333; color: var(--dim);
+            background: var(--input-bg); border: 1px solid var(--border); color: var(--dim);
             padding: 8px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
             transition: 0.2s;
         }
-        .range-btn:hover, .range-btn.active { border-color: var(--brand-gold); color: #fff; background: #222; }
+        .range-btn:hover, .range-btn.active { border-color: var(--brand-gold); color: var(--text); background: #222; }
+        body.light-mode .range-btn:hover, body.light-mode .range-btn.active { background: #e0e0e0 !important; }
 
         .print-btn {
             background: #222; border: 1px solid var(--brand-gold); color: var(--brand-gold);
@@ -118,7 +164,7 @@
         thead {
             position: sticky;
             top: 0;
-            background: #1a1a1d;
+            background: var(--card-bg);
             z-index: 10;
         }
 
@@ -142,13 +188,13 @@
         tbody tr.summary-row { cursor: pointer; transition: 0.2s; }
         tbody tr.summary-row:hover { background: var(--row-hover); }
 
-        .details-row { display: none; background: #0a0a0c; }
+        .details-row { display: none; background: var(--control-bg); }
         .details-row.open { display: table-row; }
-        .details-content { padding: 20px; display: flex; gap: 40px; flex-wrap: wrap; border-bottom: 2px solid #222; }
+        .details-content { padding: 20px; display: flex; gap: 40px; flex-wrap: wrap; border-bottom: 2px solid var(--border); }
         
         .detail-group { display: flex; flex-direction: column; gap: 5px; }
         .detail-label { font-size: 10px; color: var(--dim); font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-        .detail-value { font-size: 14px; color: #fff; }
+        .detail-value { font-size: 14px; color: var(--text); }
 
         .copy-icon {
             cursor: pointer; color: var(--brand-gold); margin-right: 8px; font-size: 12px;
@@ -158,6 +204,7 @@
             border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 5px;
         }
         .copy-btn-lg:hover { border-color: var(--brand-gold); color: var(--brand-gold); }
+        body.light-mode .copy-btn-lg { background: #fff !important; }
 
         .type-tag {
             padding: 3px 8px; border-radius: 3px; font-weight: 900; font-size: 10px;
@@ -209,9 +256,10 @@
             thead, .print-btn, .col-toggle-group, .copy-icon, #columnToggles { display: none !important; }
 
             /* Header Adjustments */
-            header { flex-direction: column; height: auto; gap: 15px; align-items: flex-start; padding: 15px; }
-            .logo-group { width: 100%; justify-content: space-between; }
-            #live-stat { width: 100%; text-align: center !important; margin-top: 5px; font-size: 12px; }
+            header { height: auto; gap: 10px; align-items: stretch; padding: 15px; }
+            .header-top { justify-content: space-between; }
+            .header-bottom { flex-direction: row; justify-content: space-between; margin-top: 5px; }
+            #live-stat { text-align: right !important; font-size: 12px; }
 
             /* Control Bar Adjustments */
             .controls { height: auto; flex-direction: column; align-items: stretch; gap: 12px; padding: 15px; }
@@ -240,11 +288,23 @@
             tr.summary-row {
                 display: flex;
                 flex-direction: column;
-                background: #111;
+                background: var(--card-bg);
                 border: 1px solid var(--border);
                 margin: 0 10px 10px 10px; /* Spacing between cards */
                 border-radius: 6px;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                position: relative; /* For absolutely positioning the date */
+                padding-top: 30px; /* Make room for the date */
+            }
+
+            .card-date {
+                position: absolute;
+                top: 8px;
+                left: 12px;
+                font-size: 12px;
+                font-weight: 800;
+                color: var(--brand-gold);
+                letter-spacing: 1px;
             }
 
             td {
@@ -252,7 +312,7 @@
                 justify-content: space-between;
                 align-items: flex-start;
                 text-align: right;
-                border-bottom: 1px solid #222;
+                border-bottom: 1px solid var(--border);
                 padding: 8px 12px;
                 font-size: 14px; /* Optimized legibility */
                 height: auto;
@@ -297,11 +357,11 @@
                 flex-direction: column;
                 gap: 20px;
                 padding: 20px;
-                background: #0e0e10;
+                background: var(--details-bg);
                 margin: -16px 15px 25px 15px; /* Pull up to attach to card, push down next card */
                 border-radius: 0 0 8px 8px;
                 border: 1px solid var(--border);
-                border-top: 1px solid #333;
+                border-top: 1px solid var(--border);
             }
             
             .detail-value { font-size: 16px; line-height: 1.4; word-break: break-word; }
@@ -325,16 +385,18 @@
 </div>
 
 <header>
-    <div class="logo-group">
-        <img src="icon-512.png" class="logo" alt="Logo">
-        <span class="brand-title">E&C | Executive Data Hub</span>
+    <div class="header-top">
+        <div class="logo-group" onclick="toggleTheme()">
+            <img src="icon-512.png" class="logo" alt="Logo">
+            <span class="brand-title">E&C | Executive Data Hub</span>
+        </div>
+        <button onclick="manualBackup()" class="print-btn">BACK UP NOW</button>
     </div>
-    
-    <button onclick="manualBackup()" class="print-btn" style="position: absolute; left: 50%; transform: translateX(-50%);">BACK UP NOW</button>
-
-    <div id="live-stat" style="font-size: 0.8rem; font-weight: 800; color: var(--dim); text-align: right;">
-        <div id="backup-stat" style="color: #00ff00; font-size: 16px; margin-bottom: 3px;">Last Backup: N/A</div>
-        <span id="counter" style="color: var(--brand-gold);">0</span> ENTRIES FOUND
+    <div class="header-bottom">
+        <div id="user-info" style="color: #00ff00; font-size: 12px; font-weight: 800;">Signed in as: <span id="current-user-display"></span></div>
+        <div id="live-stat" style="font-size: 0.8rem; font-weight: 800; color: var(--dim); text-align: right;">
+            <span id="counter" style="color: var(--brand-gold);">0</span> ENTRIES FOUND
+        </div>
     </div>
 </header>
 
@@ -360,6 +422,8 @@
             <span class="mobile-hint">&rarr;</span>
         </div>
         <div class="range-scroll">
+            <button class="range-btn" onclick="updateRange(1)">Yesterday</button>
+            <button class="range-btn" onclick="updateRange(3)">Last 3 Days</button>
             <button class="range-btn" onclick="updateRange(7)">Last 7 Days</button>
             <button class="range-btn" onclick="updateRange(14)">Last 14 Days</button>
             <button class="range-btn" onclick="updateRange(30)">Last 30 Days</button>
@@ -369,10 +433,10 @@
         </div>
     </div>
 
-    <button onclick="clearFilters()" style="margin-top: 18px; background: transparent; border: 1px solid #444; color: #fff; padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">RESET</button>
+    <button onclick="clearFilters()" style="margin-top: 18px; background: transparent; border: 1px solid #444; color: var(--text); padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">RESET</button>
     
     <div style="margin-left: auto; display: flex; gap: 10px;">
-        <button onclick="exportCurrentView()" class="print-btn" style="border-color: #555; color: #fff;">EXPORT TXT</button>
+        <button onclick="exportCurrentView()" class="print-btn" style="border-color: #555; color: var(--text);">EXPORT TXT</button>
         <button onclick="printAndDownload()" class="print-btn">PRINT PAGE</button>
     </div>
     <div id="columnToggles" class="col-toggle-group"></div>
@@ -423,7 +487,15 @@
     // --- INIT ---
     document.addEventListener("DOMContentLoaded", () => {
         renderColumnToggles();
+        if (localStorage.getItem('ec_grid_theme') === 'light') {
+            document.body.classList.add('light-mode');
+        }
     });
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        localStorage.setItem('ec_grid_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+    }
 
     function renderColumnToggles() {
         const container = document.getElementById('columnToggles');
@@ -461,6 +533,7 @@
             const admins = ["celeste@ec.com", "desirae@ec.com"];
             if (admins.includes(user.email.toLowerCase())) {
                 document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('current-user-display').innerText = user.email.split('@')[0];
                 initSync(7); // Default 7 days
                 checkAutoBackup();
             } else {
@@ -492,16 +565,41 @@
         let queryJobs = db.ref('jobs').orderByChild('timestamp');
 
         if (days !== 'all') {
-            const ms = days * 24 * 60 * 60 * 1000;
-            const startTime = Date.now() - ms;
+            let startTime;
+            const now = new Date();
+            if (days === 1) {
+                // Yesterday: from start of yesterday to end of yesterday
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                yesterday.setHours(0,0,0,0);
+                startTime = yesterday.getTime();
+                // To get ONLY yesterday, we could use endAt, but for simplicity of stream, we fetch from start and filter in stream
+            } else if (days === 3) {
+                // Last 3 days including today
+                const threeDaysAgo = new Date(now);
+                threeDaysAgo.setDate(threeDaysAgo.getDate() - 2); // 2 days ago + today = 3 days
+                threeDaysAgo.setHours(0,0,0,0);
+                startTime = threeDaysAgo.getTime();
+            } else {
+                const ms = days * 24 * 60 * 60 * 1000;
+                startTime = Date.now() - ms;
+            }
             queryJobs = queryJobs.startAt(startTime);
         }
 
-        listeners.jobs = queryJobs.on('value', s => stream(s.val()));
+        listeners.jobs = queryJobs.on('value', s => stream(s.val(), days));
     }
 
-    function stream(data) {
-        masterData = Object.entries(data || {}).map(([id, val]) => ({ ...val, id }));
+    function stream(data, daysFilter) {
+        let rawData = Object.entries(data || {}).map(([id, val]) => ({ ...val, id }));
+        
+        if (daysFilter === 1) {
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            rawData = rawData.filter(item => item.timestamp < startOfToday);
+        }
+
+        masterData = rawData;
         masterData.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
         applyFilters();
     }
@@ -538,10 +636,6 @@
         const now = new Date();
         const isFriday = now.getDay() === 5; // 5 is Friday
         
-        if (lastBackup) {
-            document.getElementById('backup-stat').innerText = "Last Backup: " + new Date(lastBackup).toDateString();
-        }
-
         const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
         const timeSince = lastBackup ? now - new Date(lastBackup) : Infinity;
 
@@ -566,7 +660,6 @@
 
         if (isAuto) {
             localStorage.setItem('ec_last_backup', new Date().toISOString());
-            document.getElementById('backup-stat').innerText = "Last Backup: " + new Date().toDateString();
         }
     }
 
@@ -632,19 +725,34 @@
 
     function applyFilters() {
         const search = document.getElementById('globalSearch').value.toLowerCase();
-        const from = document.getElementById('dateFrom').value;
-        const to = document.getElementById('dateTo').value;
+        const fromDateStr = document.getElementById('dateFrom').value;
+        const toDateStr = document.getElementById('dateTo').value;
         const body = document.getElementById('gridBody');
         
         body.innerHTML = "";
         
+        let fromTime = null;
+        let toTime = null;
+
+        if (fromDateStr) {
+            const [y, m, d] = fromDateStr.split('-');
+            fromTime = new Date(y, m - 1, d, 0, 0, 0).getTime();
+        }
+        if (toDateStr) {
+            const [y, m, d] = toDateStr.split('-');
+            toTime = new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+        } else if (fromDateStr) {
+            // If fromDate is set but toDate is not, toDate becomes end of fromDate
+            const [y, m, d] = fromDateStr.split('-');
+            toTime = new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+        }
+        
         filteredData = masterData.filter(item => {
             const ts = item.timestamp || 0;
-            const itemDate = new Date(ts).toISOString().split('T')[0];
             
             const matchSearch = JSON.stringify(item).toLowerCase().includes(search);
-            const matchFrom = !from || itemDate >= from;
-            const matchTo = !to || itemDate <= to;
+            const matchFrom = !fromTime || ts >= fromTime;
+            const matchTo = !toTime || ts <= toTime;
             
             return matchSearch && matchFrom && matchTo;
         });
@@ -655,12 +763,16 @@
             const pickupName = item.name || 'N/A';
             const delivName = item.delivery_name || 'N/A';
             
+            const itemDateObj = new Date(item.timestamp);
+            const formattedDateStr = itemDateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
             const tr = document.createElement('tr');
             tr.className = "summary-row";
             tr.onclick = () => toggleDetails(item.id);
             
-            // Added classes col-0 to col-6 for column toggling
+            // Added card-date for mobile view
             tr.innerHTML = `
+                <div class="card-date">${formattedDateStr}</div>
                 <td class="col-0" style="font-weight:700; color:var(--pickup-accent);">${pickupName}</td>
                 <td class="col-1">${item.pickup_location || ''}</td>
                 <td class="col-2">${item.pickup_city || item.city || ''}</td>
@@ -676,10 +788,6 @@
             detailTr.innerHTML = `
                 <td colspan="7">
                     <div class="details-content">
-                        <div class="detail-group">
-                            <span class="detail-label">DATE</span>
-                            <span class="detail-value"><div style="display:flex; align-items:center;">${new Date(item.timestamp).toLocaleDateString()}<span class="mobile-copy" onclick="copyLine(this, '${new Date(item.timestamp).toLocaleDateString()}')">❐</span></div></span>
-                        </div>
                         <div class="detail-group">
                             <span class="detail-label">DRIVER</span>
                             <span class="detail-value" style="font-weight:800; color:var(--brand-gold);">${(item.assigned_to || '---').toUpperCase()}</span>
@@ -704,7 +812,11 @@
                             <span class="detail-label">LAST EDIT BY</span>
                             <span class="detail-value">${item.last_edit_by || 'Unknown'}</span>
                         </div>
-                        <div class="detail-group" style="margin-left:auto;">
+                        <div class="detail-group" style="margin-left:auto; text-align:right;">
+                             <span class="detail-label" style="display:block; margin-bottom: 5px;">DATE</span>
+                             <span class="detail-value" style="display:block; margin-bottom: 15px;">
+                                <div style="display:flex; align-items:center; justify-content: flex-end;">${formattedDateStr}<span class="mobile-copy" onclick="copyLine(this, '${formattedDateStr}')">❐</span></div>
+                             </span>
                             <button class="copy-btn-lg" onclick="copyCardAll(this, '${encodeURIComponent(JSON.stringify(item))}')">COPY CARD INFO</button>
                         </div>
                     </div>
