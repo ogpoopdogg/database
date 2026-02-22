@@ -404,10 +404,10 @@
             <img src="icon-512.png" class="logo" alt="Logo">
             <span class="brand-title">E&C | Executive Data Hub</span>
         </div>
-        <button onclick="manualBackup()" class="print-btn">BACK UP NOW</button>
+        <button onclick="manualBackup()" class="print-btn" style="background-color: #0077be; color: #fff; border-color: #0077be;">BACK UP NOW</button>
     </div>
     <div class="header-bottom">
-        <div id="user-info" style="color: #00ff00; font-size: 12px; font-weight: 800;">Signed in as: <span id="current-user-display"></span></div>
+        <div id="user-info" style="color: #00ff00; font-size: 12px; font-weight: 800; text-transform: uppercase;">SIGNED IN AS: <span id="current-user-display"></span></div>
         <div id="live-stat" style="font-size: 0.8rem; font-weight: 800; color: var(--dim); text-align: right;">
             <span id="counter" style="color: var(--brand-gold);">0</span> ENTRIES FOUND
         </div>
@@ -436,7 +436,7 @@
         <button onclick="clearFilters()" style="margin-bottom: 2px; background: transparent; border: 1px solid #444; color: var(--text); padding: 7px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">RESET</button>
         
         <div style="margin-left: auto; display: flex; gap: 10px; margin-bottom: 2px;">
-            <button onclick="exportCurrentView()" class="print-btn" style="border-color: #555; color: var(--text);">EXPORT TXT</button>
+            <button onclick="exportCurrentView()" class="print-btn" style="border-color: #555; color: var(--text);">EXPORT EXCEL</button>
             <button onclick="printAndDownload()" class="print-btn">PRINT PAGE</button>
         </div>
     </div>
@@ -456,7 +456,7 @@
             <button class="range-btn" onclick="updateRange(180)">Last 6 Months</button>
             <button class="range-btn" onclick="updateRange('all')">All Time</button>
         </div>
-        <div id="columnToggles" class="col-toggle-group" style="margin-top: 0; margin-left: auto; width: auto; align-items: center;"></div>
+        <div id="columnToggles" class="col-toggle-group" style="margin-top: 0; margin-left: 0; width: auto; align-items: center;"></div>
     </div>
 </div>
 
@@ -633,17 +633,35 @@
     // --- BACKUP & EXPORT SYSTEM ---
     
     function generateFileContent(dataArray, title) {
-        if (dataArray.length === 0) return "No Data Found.";
-        let textContent = `${title}\nDate Generated: ${new Date().toLocaleString()}\nEntries: ${dataArray.length}\n----------------------------------------\n\n`;
+        if (dataArray.length === 0) return "<table border='1'><tr><td>No Data Found.</td></tr></table>";
+        
+        let html = `<table border="1" style="border-collapse: collapse;">\n`;
+        html += `<tr><th>ID</th><th>Date</th><th>Status</th><th>Driver</th><th>Pickup</th><th>Delivery</th><th>Pickup Addr</th><th>Deliv Addr</th><th>City</th><th>PO</th><th>Details</th><th>Notes</th><th>Created By</th><th>Last Edit By</th></tr>\n`;
         
         dataArray.forEach(item => {
-            textContent += `ID: ${item.id}\nDate: ${new Date(item.timestamp).toLocaleString()}\nStatus: ${(item.status || 'unknown').toUpperCase()}\nDriver: ${item.assigned_to}\nPickup: ${item.name || 'N/A'}\nDelivery: ${item.delivery_name || 'N/A'}\nPickup Addr: ${item.pickup_location || 'N/A'}\nDeliv Addr: ${item.destination || 'N/A'}\nCity: ${item.city}\nPO: ${item.po_number}\nDetails: ${item.package_details}\nNotes: ${item.other_info}\nUser: ${item.created_by || '?'} / ${item.last_edit_by || '?'}\n\n----------------------------------------\n\n`;
+            html += `<tr>`;
+            html += `<td>${item.id || ''}</td>`;
+            html += `<td>${new Date(item.timestamp).toLocaleString()}</td>`;
+            html += `<td>${(item.status || 'unknown').toUpperCase()}</td>`;
+            html += `<td>${item.assigned_to || ''}</td>`;
+            html += `<td>${item.name || 'N/A'}</td>`;
+            html += `<td>${item.delivery_name || 'N/A'}</td>`;
+            html += `<td>${item.pickup_location || 'N/A'}</td>`;
+            html += `<td>${item.destination || 'N/A'}</td>`;
+            html += `<td>${item.city || ''}</td>`;
+            html += `<td>${item.po_number || ''}</td>`;
+            html += `<td>${item.package_details || ''}</td>`;
+            html += `<td>${item.other_info || ''}</td>`;
+            html += `<td>${item.created_by || '?'}</td>`;
+            html += `<td>${item.last_edit_by || '?'}</td>`;
+            html += `</tr>\n`;
         });
-        return textContent;
+        html += `</table>`;
+        return html;
     }
 
     function downloadTextFile(filename, content) {
-        const blob = new Blob([content], { type: 'text/plain' });
+        const blob = new Blob([content], { type: 'application/vnd.ms-excel' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = filename;
@@ -654,7 +672,7 @@
         const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
         const s = new Date(startMs);
         const e = new Date(endMs);
-        return `backup_${months[s.getMonth()]}${s.getDate()}_${months[e.getMonth()]}${e.getDate()}.txt`;
+        return `backup_${months[s.getMonth()]}${s.getDate()}_${months[e.getMonth()]}${e.getDate()}.xls`;
     }
 
     function checkAutoBackup() {
@@ -695,12 +713,12 @@
 
     function exportCurrentView() {
         const content = generateFileContent(filteredData, "E&C EXPORT - CURRENT VIEW");
-        downloadTextFile(`EC_Export_${new Date().toISOString().split('T')[0]}.txt`, content);
+        downloadTextFile(`EC_Export_${new Date().toISOString().split('T')[0]}.xls`, content);
     }
 
     function printAndDownload() {
-        window.print();
-        // Removed downloadData() call
+        const content = generateFileContent(filteredData, "E&C PRINT VIEW");
+        downloadTextFile(`EC_Print_${new Date().toISOString().split('T')[0]}.xls`, content);
     }
 
     // --- UI HELPERS ---
