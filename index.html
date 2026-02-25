@@ -559,16 +559,23 @@
     // --- ACCESS CONTROL ---
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
-            const admins = ["celeste@ec.com", "desirae@ec.com"];
-            if (admins.includes(user.email.toLowerCase())) {
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('current-user-display').innerText = user.email.split('@')[0];
-                initSync(7); // Default 7 days
-                checkAutoBackup();
-            } else {
-                alert("Restricted Access.");
-                firebase.auth().signOut();
-            }
+            const username = user.email.split('@')[0].toLowerCase();
+            db.ref(`roles/${username}/driver`).once('value').then(snapshot => {
+                if (snapshot.val() === true) {
+                    currentDriver = username;
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.querySelector('header').style.display = 'flex';
+                    clearAllNotifications();
+                    startContinuousTracking();
+                    setupIntersectionObserver();
+                    startDataListeners();
+                    mergeAndRender();
+                } else {
+                    alert("ACCESS DENIED");
+                    firebase.auth().signOut();
+                    document.getElementById('login-overlay').style.display = 'flex';
+                }
+            });
         }
     });
 
