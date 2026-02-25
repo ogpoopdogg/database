@@ -560,6 +560,7 @@
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
             const username = user.email.split('@')[0].toLowerCase();
+            document.getElementById('current-user-display').innerText = username;
             db.ref(`roles/${username}/grid`).once('value').then(snapshot => {
                 if (snapshot.val() === true) {
                     currentDriver = username;
