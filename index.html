@@ -566,11 +566,7 @@
                     currentDriver = username;
                     document.getElementById('login-overlay').style.display = 'none';
                     document.querySelector('header').style.display = 'flex';
-                    clearAllNotifications();
-                    startContinuousTracking();
-                    setupIntersectionObserver();
-                    startDataListeners();
-                    mergeAndRender();
+                    initSync(currentRange);
 
                     const list = document.getElementById('dev-list');
                     firebase.database().ref('developer').on('value', snap => {
