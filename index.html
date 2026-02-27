@@ -661,7 +661,7 @@
     function generateFileContent(dataArray, title) {
         if (dataArray.length === 0) return "No Data Found.";
         
-        let csv = `ID,Date,Status,Driver,Pickup,Delivery,Pickup Addr,Deliv Addr,City,PO,Details,Notes,Created By,Last Edit By\n`;
+        let csv = `ID,Date,Status,Driver,Pickup,Delivery,Pickup Addr,Deliv Addr,City,PO,Details,Notes,Created By,Last Edit By,Job History\n`;
         
         dataArray.forEach(item => {
             let row = [
@@ -678,7 +678,8 @@
                 item.package_details || '',
                 item.other_info || '',
                 item.created_by || '?',
-                item.last_edit_by || '?'
+                item.last_edit_by || '?',
+                item.job_history || ''
             ];
             csv += row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',') + "\n";
         });
@@ -761,7 +762,7 @@
 
     function copyCardAll(btn, itemStr) {
         const item = JSON.parse(decodeURIComponent(itemStr));
-        const text = `Date: ${new Date(item.timestamp).toLocaleString()}\nStatus: ${item.status || 'N/A'}\nDriver: ${item.assigned_to}\nPickup: ${item.name}\nDelivery: ${item.delivery_name}\nPickup Addr: ${item.pickup_location || 'N/A'}\nDeliv Addr: ${item.destination || 'N/A'}\nCity: ${item.city}\nPO: ${item.po_number}\nDetails: ${item.package_details}\nNotes: ${item.other_info}`;
+        const text = `Date: ${new Date(item.timestamp).toLocaleString()}\nStatus: ${item.status || 'N/A'}\nDriver: ${item.assigned_to}\nPickup: ${item.name}\nDelivery: ${item.delivery_name}\nPickup Addr: ${item.pickup_location || 'N/A'}\nDeliv Addr: ${item.destination || 'N/A'}\nCity: ${item.city}\nPO: ${item.po_number}\nDetails: ${item.package_details}\nNotes: ${item.other_info}\nHistory: ${item.job_history || 'None'}`;
         
         navigator.clipboard.writeText(text).then(() => {
             const original = btn.innerText;
@@ -890,6 +891,10 @@
                         <div class="detail-group">
                             <span class="detail-label">LAST EDIT BY</span>
                             <span class="detail-value">${item.last_edit_by || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">JOB HISTORY</span>
+                            <span class="detail-value">${item.job_history || 'No history'}</span>
                         </div>
                         <div class="detail-group" style="margin-left:auto; text-align:right;">
                              <span class="detail-label" style="display:block; margin-bottom: 5px;">DATE</span>
