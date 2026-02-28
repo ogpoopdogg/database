@@ -176,6 +176,21 @@
             letter-spacing: 1px;
             border-bottom: 2px solid var(--brand-gold);
             white-space: nowrap;
+            position: relative;
+        }
+
+        /* Resizer styles */
+        .resizer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            cursor: col-resize;
+            user-select: none;
+        }
+        .resizer:hover, .resizing {
+            background-color: var(--brand-gold);
         }
 
         td {
@@ -340,12 +355,16 @@
             /* Labels via CSS generated content */
             .col-0::before { content: "Date"; }
             .col-1::before { content: "Pickup Contact"; }
-            .col-2::before { content: "Pickup Address"; }
-            .col-3::before { content: "Pickup City"; }
-            .col-4::before { content: "Delivery Contact"; }
-            .col-5::before { content: "Delivery Address"; }
-            .col-6::before { content: "Delivery City"; }
-            .col-7::before { content: "Packages"; }
+            .col-2::before { content: "Pickup Phone"; }
+            .col-3::before { content: "Pickup Email"; }
+            .col-4::before { content: "Pickup Address"; }
+            .col-5::before { content: "Pickup City"; }
+            .col-6::before { content: "Delivery Contact"; }
+            .col-7::before { content: "Delivery Phone"; }
+            .col-8::before { content: "Delivery Email"; }
+            .col-9::before { content: "Delivery Address"; }
+            .col-10::before { content: "Delivery City"; }
+            .col-11::before { content: "Packages"; }
 
             td::before {
                 color: var(--dim);
@@ -467,12 +486,16 @@
             <tr>
                 <th class="col-0">Date</th>
                 <th class="col-1">Pickup Contact</th>
-                <th class="col-2">Pickup Address</th>
-                <th class="col-3">Pickup City</th>
-                <th class="col-4">Delivery Contact</th>
-                <th class="col-5">Delivery Address</th>
-                <th class="col-6">Delivery City</th>
-                <th class="col-7">Packages</th>
+                <th class="col-2">Pickup Phone</th>
+                <th class="col-3">Pickup Email</th>
+                <th class="col-4">Pickup Address</th>
+                <th class="col-5">Pickup City</th>
+                <th class="col-6">Delivery Contact</th>
+                <th class="col-7">Delivery Phone</th>
+                <th class="col-8">Delivery Email</th>
+                <th class="col-9">Delivery Address</th>
+                <th class="col-10">Delivery City</th>
+                <th class="col-11">Packages</th>
             </tr>
         </thead>
         <tbody id="gridBody">
@@ -501,13 +524,14 @@
 
     // Column Config
     const columnConfig = [
-        "Date", "Pickup Contact", "Pickup Address", "Pickup City", "Delivery Contact", "Delivery Address", "Delivery City", "Packages"
+        "Date", "Pickup Contact", "Pickup Phone", "Pickup Email", "Pickup Address", "Pickup City", "Delivery Contact", "Delivery Phone", "Delivery Email", "Delivery Address", "Delivery City", "Packages"
     ];
-    let visibleCols = new Array(8).fill(true);
+    let visibleCols = new Array(12).fill(true);
 
     // --- INIT ---
     document.addEventListener("DOMContentLoaded", () => {
         renderColumnToggles();
+        initResizableColumns();
         if (localStorage.getItem('ec_grid_theme') === 'light') {
             document.body.classList.add('light-mode');
         }
@@ -520,6 +544,40 @@
             }
         });
     });
+
+    function initResizableColumns() {
+        const ths = document.querySelectorAll('#dataTable th');
+        ths.forEach(th => {
+            const resizer = document.createElement('div');
+            resizer.className = 'resizer';
+            th.appendChild(resizer);
+            createResizableColumn(th, resizer);
+        });
+    }
+
+    function createResizableColumn(th, resizer) {
+        let x = 0;
+        let w = 0;
+        const mouseDownHandler = function(e) {
+            x = e.clientX;
+            const styles = window.getComputedStyle(th);
+            w = parseInt(styles.width, 10);
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            resizer.classList.add('resizing');
+        };
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            th.style.minWidth = `${w + dx}px`;
+            th.style.width = `${w + dx}px`;
+        };
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            resizer.classList.remove('resizing');
+        };
+        resizer.addEventListener('mousedown', mouseDownHandler);
+    }
 
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
@@ -762,7 +820,7 @@
 
     function copyCardAll(btn, itemStr) {
         const item = JSON.parse(decodeURIComponent(itemStr));
-        const text = `Date: ${new Date(item.timestamp).toLocaleString()}\nStatus: ${item.status || 'N/A'}\nDriver: ${item.assigned_to}\nPickup: ${item.name}\nDelivery: ${item.delivery_name}\nPickup Addr: ${item.pickup_location || 'N/A'}\nDeliv Addr: ${item.destination || 'N/A'}\nCity: ${item.city}\nPO: ${item.po_number}\nDetails: ${item.package_details}\nNotes: ${item.other_info}\nHistory: ${item.job_history || 'None'}`;
+        const text = `Date: ${new Date(item.timestamp).toLocaleString()}\nStatus: ${item.status || 'N/A'}\nDriver: ${item.assigned_to}\nPickup: ${item.name}\nPickup Phone: ${item.p_phone || 'N/A'}\nPickup Email: ${item.p_email || 'N/A'}\nDelivery: ${item.delivery_name}\nDelivery Phone: ${item.d_phone || 'N/A'}\nDelivery Email: ${item.d_email || 'N/A'}\nPickup Addr: ${item.pickup_location || 'N/A'}\nDeliv Addr: ${item.destination || 'N/A'}\nCity: ${item.city}\nPO: ${item.po_number}\nDetails: ${item.package_details}\nNotes: ${item.other_info}\nHistory: ${item.job_history || 'None'}`;
         
         navigator.clipboard.writeText(text).then(() => {
             const original = btn.innerText;
@@ -854,19 +912,23 @@
                     ${completedTimeStr ? `<div class="card-time">${completedTimeStr}</div>` : ''}
                     ${pickupName}
                 </td>
-                <td class="col-2">${item.pickup_location || ''}</td>
-                <td class="col-3">${item.pickup_city || item.city || ''}</td>
-                <td class="col-4" style="font-weight:700; color:var(--delivery-accent);">${delivName}</td>
-                <td class="col-5">${item.destination || ''}</td>
-                <td class="col-6">${item.delivery_city || item.city || ''}</td>
-                <td class="col-7" style="font-weight:700; color:var(--brand-gold);">${item.package_details || ''}</td>
+                <td class="col-2">${item.p_phone || ''}</td>
+                <td class="col-3">${item.p_email || ''}</td>
+                <td class="col-4">${item.pickup_location || ''}</td>
+                <td class="col-5">${item.pickup_city || item.city || ''}</td>
+                <td class="col-6" style="font-weight:700; color:var(--delivery-accent);">${delivName}</td>
+                <td class="col-7">${item.d_phone || ''}</td>
+                <td class="col-8">${item.d_email || ''}</td>
+                <td class="col-9">${item.destination || ''}</td>
+                <td class="col-10">${item.delivery_city || item.city || ''}</td>
+                <td class="col-11" style="font-weight:700; color:var(--brand-gold);">${item.package_details || ''}</td>
             `;
             
             const detailTr = document.createElement('tr');
             detailTr.id = 'detail-' + item.id;
             detailTr.className = 'details-row';
             detailTr.innerHTML = `
-                <td colspan="8">
+                <td colspan="12">
                     <div class="details-content">
                         <div class="detail-group">
                             <span class="detail-label">DRIVER</span>
