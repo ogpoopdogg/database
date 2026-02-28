@@ -577,7 +577,7 @@
                       Object.values(notes).forEach(note => {
                         list.innerHTML += `
                           <div class="dev-item">
-                            <div class="dev-hdr">${note.user}- <span style="color: orange;">Database</span>- ${note.date}</div>
+                            <div class="dev-hdr">${note.user}- <span style="color: orange;">${note.app || 'Database'}</span>- ${note.date}</div>
                             <div>${note.text}</div>
                           </div>`;
                       });
@@ -980,6 +980,7 @@
     firebase.database().ref('developer').push({
       text: devQuill.root.innerHTML,
       user: user,
+      app: "Database",
       date: dateStr,
       timestamp: firebase.database.ServerValue.TIMESTAMP
     }).then(() => {
